@@ -1,0 +1,7 @@
+{
+    "org": "pulse_sensor",
+    "bucket": "db_pulse_sensor",
+    "precision": "ms",
+    "url": "https://us-east-1-1.aws.cloud2.influxdata.com",
+    "token": "3m6Mp3X2syJIA6ZTd02DqNx1QZAM5h_6LzUEdf5YG8dZJFuXUzQPnabt78G_uQnMcJ_4VZi5UwUQRdKBwLm-Pg=="
+}

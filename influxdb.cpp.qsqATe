@@ -1,0 +1,59 @@
+#include "influxdb.h"
+
+InfluxDB::InfluxDB() {
+    getConfig();
+    makeConnection();
+}
+
+void InfluxDB::getConfig() {
+    QFile file(":/database/influxdb.json");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open influxdb.json";
+        return;
+    }
+
+    QByteArray jsonData = file.readAll();
+    file.close();
+
+    QJsonDocument document = QJsonDocument::fromJson(jsonData);
+    QJsonObject jsonObject = document.object();
+
+    this->config.org = jsonObject["org"].toString().trimmed();
+    this->config.bucket = jsonObject["bucket"].toString().trimmed();
+    this->config.precision = jsonObject["precison"].toString().trimmed();
+    this->config.url = jsonObject["url"].toString().trimmed();
+    this->config.token = jsonObject["token"].toString().trimmed();
+}
+
+void InfluxDB::makeConnection() {
+    QUrl url(this->config.url);
+    QUrlQuery query;
+
+    query.addQueryItem("org", this->config.org);
+    query.addQueryItem("bucket", this->config.bucket);
+    query.addQueryItem("precision", this->config.org);
+
+    url.setQuery(query);
+
+    QNetworkAccessManager manager;
+    QNetworkRequest request(url);
+
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain");
+
+    QString token = QString("Token ") + this->config.token;
+    request.setRawHeader("Authorization", token.toUtf8());
+
+    QByteArray data = "weather,location=us-midwest temperature=82 1697894400004";
+    QNetworkReply *reply = manager.post(request, data);
+
+    // 处理响应
+    QObject::connect(reply, &QNetworkReply::finished, [reply]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            qWarning() << "Request failed:" << reply->errorString();
+        } else {
+            qDebug() << "Request succeeded:" << reply->readAll();
+        }
+        reply->deleteLater();
+        //QCoreApplication::quit();
+    });
+}
