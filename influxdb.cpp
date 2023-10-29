@@ -5,6 +5,11 @@ InfluxDB::InfluxDB(quint32 size): buf_size(size), count(0) {
     makeRequest();
 }
 
+InfluxDB::~InfluxDB() {
+    // send last buffered data before destruction
+    this->sendData(this->buffer);
+}
+
 void InfluxDB::getConfig() {
 
     // Open database configuration file

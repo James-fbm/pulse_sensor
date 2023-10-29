@@ -56,6 +56,7 @@ private:
 
 public:
     InfluxDB(quint32 size = 512);
+    ~InfluxDB();
     template<typename T>
     void addData(DBRecord<T>& record);
     void addData(DBRecord<QString>& record);
