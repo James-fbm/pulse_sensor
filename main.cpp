@@ -33,41 +33,22 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    InfluxDB ix(1);
-    /*
-    for (unsigned long i = 1698894500007 ;; i += 512) {
-        QString buf_data("");
-        for (unsigned j = 0 ; j < 512 ; ++j) {
-            // buf_data += "w_512,location=us-midwest temperature=82 ";
-            buf_data += "s_512 value=82.3 ";
-            buf_data += QString::number(i+j, 10);
-            buf_data += '\n';
-        }
-        ix.sendData(buf_data);
-        // qDebug() << buf_data;
-        qDebug() << buf_data.size();
-        qDebug() << "i = " << i - 1698894500006;
-    }
-    */
-    QString measurement("snv");
-    QMap<QString, QString> mtag{{"name", "gcq"}};
-    QMap<QString, QString> mfield{{"value", "55"},{"feel","1"}};
-    QString timestamp("1698894500007");
-    ix.addData(measurement, mtag, mfield, timestamp);
+    InfluxDB ix(2);
 
     DBRecord<quint32> r;
-    r.measurement = "snv";
-    r.tag = {{"name", "gcq"}};
-    r.field = {{"value", 44}};
+    r.measurement = "snvd";
+    r.tag = {{"name", "pl"}};
+    r.field = {{"value", 4}};
     r.timestamp = 1698894500008;
 
     DBRecord<QString> rs;
-    rs.measurement = "snv";
-    rs.tag = {{"name", "gcq"}};
-    rs.field = {{"value", "44"}};
-    rs.timestamp = 1698894500008;
-    ix.addDataR(r);
-    ix.addDataR(rs);
+    rs.measurement = "snvs";
+    rs.tag = {{"name", "pl"}};
+    rs.field = {{"value", "12"}};
+    rs.timestamp = 1698894500009;
+    ix.addData(r);
+    ix.addData(rs);
+
     return a.exec();
 }
 

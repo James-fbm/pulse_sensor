@@ -34,7 +34,7 @@ struct DBRecord {
     QString measurement;            // measurement should be a string
     QMap<QString, QString> tag;     // key and value of a tag should be strings
     QMap<QString, T> field;         // key of a field should be string;
-                                    // value of a field can be arithmeti types or string, ...
+                                    // value of a field can be arithmetic types or string
     quint64 timestamp;              // timestamp should be an unsigned long
 
 };
@@ -56,20 +56,64 @@ private:
 
 public:
     InfluxDB(quint32 size = 512);
-    void addData(QString& measurement, QMap<QString, QString>& tag,
-                 QMap<QString, QString>& field, QString& timestamp);
     template<typename T>
-    void addDataR(DBRecord<T>& record);
-    void addDataR(DBRecord<QString>& record);
+    void addData(DBRecord<T>& record);
+    void addData(DBRecord<QString>& record);
     const QString& getBuffer();
 };
 
 
 // This definition has to be put in a header file, or there will be a compilation error
 template<typename T>
-void InfluxDB::addDataR(DBRecord<T>& record) {
-    // Implementation for general case
+void InfluxDB::addData(DBRecord<T>& record) {
+
+    // QString version has been specialized
     static_assert(std::is_arithmetic<T>::value,
-            "DBRecord only accepts arithmetic types or a QString");
-    qDebug() << "arithmetic record";
+            "Type T should be an arithmetic type or a QString");
+
+    // Implementation for arithemtic types
+    QString data("");
+
+    data += record.measurement;
+
+    // add tag keys and values
+    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
+        data += ",";
+        data += t.key();
+        data += "=";
+        data += t.value();
+    }
+
+    data += ' ';
+
+    // add field keys and values
+    auto f = record.field.cbegin();
+    if (f == record.field.cend()) {
+
+    } else {
+        data += f.key();
+        data += "=";
+        data += QString::number(f.value());
+        ++f;
+        for (; f != record.field.cend() ; ++f) {
+            data += ',';
+            data += f.key();
+            data += "=";
+            data += QString::number(f.value());
+        }
+        data += ' ';
+    }
+
+    data += QString::number(record.timestamp);
+    data += '\n';
+
+    this->buffer += data;
+    this->count += 1;
+
+    // if buffer is full, send an Http request
+    if (this->count == this->buf_size) {
+        this->sendData(this->buffer);
+        this->count = 0;
+        this->buffer = "";
+    }
 }

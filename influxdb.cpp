@@ -6,6 +6,8 @@ InfluxDB::InfluxDB(quint32 size): buf_size(size), count(0) {
 }
 
 void InfluxDB::getConfig() {
+
+    // Open database configuration file
     QFile file(":/database/influxdb.json");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug() << "Failed to open influxdb.json";
@@ -18,6 +20,7 @@ void InfluxDB::getConfig() {
     QJsonDocument document = QJsonDocument::fromJson(jsonData);
     QJsonObject jsonObject = document.object();
 
+    // Read and store all the attributes
     this->config.org = jsonObject["org"].toString().trimmed();
     this->config.bucket = jsonObject["bucket"].toString().trimmed();
     this->config.precision = jsonObject["precision"].toString().trimmed();
@@ -27,6 +30,8 @@ void InfluxDB::getConfig() {
 
 void InfluxDB::makeRequest() {
 
+    // Intialize an Http request for writing database
+    // Use request url and header with configuration attributes stored by getConfig()
     QUrl url(this->config.url);
     QUrl endpoint("/api/v2/write");
     url = url.resolved(endpoint);
@@ -48,6 +53,10 @@ void InfluxDB::makeRequest() {
 }
 
 void InfluxDB::sendData(QString& data) {
+
+    // See the request data format at https://docs.influxdata.com/influxdb/v2/write-data/developer-tools/api/
+    // The `data` variable represents the --data-binary part of the curl command.
+    // Use QString for flexibility
     QByteArray bdata = data.toUtf8();
     QNetworkReply *reply = this->manager.post(this->request, bdata);
 
@@ -61,18 +70,20 @@ void InfluxDB::sendData(QString& data) {
         qDebug() << "Error:" << reply->errorString();
     }
 
-    qDebug() << this->buffer;
+    qDebug() << "Sent data length:" << this->buffer.size() << "bytes";
     reply->deleteLater();
 }
 
-void InfluxDB::addData(QString& measurement, QMap<QString, QString>& tag,
-             QMap<QString, QString>& field, QString& timestamp) {
 
+void InfluxDB::addData(DBRecord<QString>& record) {
+
+    // Specialized implementation for QString
     QString data("");
 
-    data += measurement;
+    data += record.measurement;
 
-    for (auto t = tag.cbegin(); t != tag.cend() ; ++t) {
+    // add tag keys and values
+    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
         data += ",";
         data += t.key();
         data += "=";
@@ -81,29 +92,33 @@ void InfluxDB::addData(QString& measurement, QMap<QString, QString>& tag,
 
     data += ' ';
 
-    auto f = field.cbegin();
-    if (f == field.cend()) {
+    // add field keys and values
+    auto f = record.field.cbegin();
+    if (f == record.field.cend()) {
 
     } else {
         data += f.key();
-        data += "=";
+        data += "=\"";          // string value needs to be surrounded by `"`
         data += f.value();
+        data += '\"';
         ++f;
-        for (; f != field.cend() ; ++f) {
+        for (; f != record.field.cend() ; ++f) {
             data += ',';
             data += f.key();
-            data += "=";
+            data += "=\"";          // string value needs to be surrounded by `"`
             data += f.value();
+            data += '\"';
         }
+        data += ' ';
     }
 
-    data += ' ';
-    data += timestamp;
+    data += QString::number(record.timestamp);
     data += '\n';
 
     this->buffer += data;
     this->count += 1;
 
+    // if buffer is full, send an Http request
     if (this->count == this->buf_size) {
         this->sendData(this->buffer);
         this->count = 0;
@@ -111,11 +126,7 @@ void InfluxDB::addData(QString& measurement, QMap<QString, QString>& tag,
     }
 }
 
-void InfluxDB::addDataR(DBRecord<QString>& record) {
-    // Specialized implementation for QString
-    qDebug() << "QString record";
-}
-
 const QString& InfluxDB::getBuffer() {
     return this->buffer;
 }
+
