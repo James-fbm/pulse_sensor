@@ -29,13 +29,13 @@ struct DBConfig {
 };
 
 // map to single record in InfluxDB
-template<typename T>
+template<typename T = double>
 struct DBRecord {
-    QString measurement;            // measurement should be a string
-    QMap<QString, QString> tag;     // key and value of a tag should be strings
-    QMap<QString, T> field;         // key of a field should be string;
-                                    // value of a field can be arithmetic types or string
-    quint64 timestamp;              // timestamp should be an unsigned long
+    QString measurement;                // measurement should be a string
+    QMap<QString, QString> tag;         // key and value of a tag should be strings
+    QMap<QString, T> ar_field;          // key of a field should be string;
+    QMap<QString, QString> str_field;   // value of a field can be arithmetic types or string
+    quint64 timestamp;                  // timestamp should be an unsigned long
 
 };
 
@@ -59,7 +59,6 @@ public:
     ~InfluxDB();
     template<typename T>
     void addData(DBRecord<T>& record);
-    void addData(DBRecord<QString>& record);
     const QString& getBuffer();
 };
 
@@ -68,42 +67,64 @@ public:
 template<typename T>
 void InfluxDB::addData(DBRecord<T>& record) {
 
-    // QString version has been specialized
     static_assert(std::is_arithmetic<T>::value,
-            "Type T should be an arithmetic type or a QString");
+            "Type T should be an arithmetic type");
 
     // Implementation for arithemtic types
     QString data("");
 
     data += record.measurement;
 
-    // add tag keys and values
-    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
+    // Add tag keys and values
+    for (auto titer = record.tag.cbegin(); titer != record.tag.cend() ; ++titer) {
         data += ",";
-        data += t.key();
+        data += titer.key();
         data += "=";
-        data += t.value();
+        data += titer.value();
     }
 
+    // End of measurement and tag segment
     data += ' ';
 
-    // add field keys and values
-    auto f = record.field.cbegin();
-    if (f == record.field.cend()) {
+    // Add field keys and values
+    auto ar_fiter = record.ar_field.cbegin();
+    auto str_fiter = record.str_field.cbegin();
+    bool has_field = true;
 
-    } else {
-        data += f.key();
+    // According to the data format, field segment should begin with a valid K-V pair
+    if (ar_fiter != record.ar_field.cend()) {
+        data += ar_fiter.key();
         data += "=";
-        data += QString::number(f.value());
-        ++f;
-        for (; f != record.field.cend() ; ++f) {
-            data += ',';
-            data += f.key();
-            data += "=";
-            data += QString::number(f.value());
-        }
-        data += ' ';
+        data += QString::number(ar_fiter.value());
+        ++ar_fiter;
+    } else if (str_fiter != record.str_field.cend()) {
+        data += str_fiter.key();
+        data += "=\"";                  // string value needs to be surrounded by `"`
+        data += str_fiter.value();
+        data += '\"';
+        ++str_fiter;
+    } else {
+        has_field = false;
     }
+
+    for (; ar_fiter != record.ar_field.cend() ; ++ar_fiter) {
+        data += ',';
+        data += ar_fiter.key();
+        data += "=";
+        data += QString::number(ar_fiter.value());
+    }
+
+    for (; str_fiter != record.str_field.cend() ; ++str_fiter) {
+        data += ',';
+        data += str_fiter.key();
+        data += "=\"";                  // string value needs to be surrounded by `"`
+        data += str_fiter.value();
+        data += '\"';
+    }
+
+    // End of field segment. If no field to be written, a new space should be ignored
+    if (has_field)
+        data += ' ';
 
     data += QString::number(record.timestamp);
     data += '\n';

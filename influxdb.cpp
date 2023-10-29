@@ -69,6 +69,8 @@ void InfluxDB::sendData(QString& data) {
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
+    qDebug() << "Sent data: " << this->buffer << "bytes";
+
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "Success:" << reply->readAll();
     } else {
@@ -80,58 +82,58 @@ void InfluxDB::sendData(QString& data) {
 }
 
 
-void InfluxDB::addData(DBRecord<QString>& record) {
+//void InfluxDB::addData(DBRecord<QString>& record) {
 
-    // Specialized implementation for QString
-    QString data("");
+//    // Specialized implementation for QString
+//    QString data("");
 
-    data += record.measurement;
+//    data += record.measurement;
 
-    // add tag keys and values
-    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
-        data += ",";
-        data += t.key();
-        data += "=";
-        data += t.value();
-    }
+//    // add tag keys and values
+//    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
+//        data += ",";
+//        data += t.key();
+//        data += "=";
+//        data += t.value();
+//    }
 
-    data += ' ';
+//    data += ' ';
 
-    // add field keys and values
-    auto f = record.field.cbegin();
-    if (f == record.field.cend()) {
+//    // add field keys and values
+//    auto f = record.field.cbegin();
+//    if (f == record.field.cend()) {
 
-    } else {
-        data += f.key();
-        data += "=\"";          // string value needs to be surrounded by `"`
-        data += f.value();
-        data += '\"';
-        ++f;
-        for (; f != record.field.cend() ; ++f) {
-            data += ',';
-            data += f.key();
-            data += "=\"";          // string value needs to be surrounded by `"`
-            data += f.value();
-            data += '\"';
-        }
-        data += ' ';
-    }
+//    } else {
+//        data += f.key();
+//        data += "=\"";          // string value needs to be surrounded by `"`
+//        data += f.value();
+//        data += '\"';
+//        ++f;
+//        for (; f != record.field.cend() ; ++f) {
+//            data += ',';
+//            data += f.key();
+//            data += "=\"";          // string value needs to be surrounded by `"`
+//            data += f.value();
+//            data += '\"';
+//        }
+//        data += ' ';
+//    }
 
-    data += QString::number(record.timestamp);
-    data += '\n';
+//    data += QString::number(record.timestamp);
+//    data += '\n';
 
-    this->buffer += data;
-    this->count += 1;
+//    this->buffer += data;
+//    this->count += 1;
 
-    // if buffer is full, send an Http request
-    if (this->count == this->buf_size) {
-        this->sendData(this->buffer);
-        this->count = 0;
-        this->buffer = "";
-    }
-}
+//    // if buffer is full, send an Http request
+//    if (this->count == this->buf_size) {
+//        this->sendData(this->buffer);
+//        this->count = 0;
+//        this->buffer = "";
+//    }
+//}
 
-const QString& InfluxDB::getBuffer() {
-    return this->buffer;
-}
+//const QString& InfluxDB::getBuffer() {
+//    return this->buffer;
+//}
 

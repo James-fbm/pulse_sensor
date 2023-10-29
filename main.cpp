@@ -38,13 +38,14 @@ int main(int argc, char *argv[])
     DBRecord<quint32> r;
     r.measurement = "snvd";
     r.tag = {{"name", "pl"}};
-    r.field = {{"value", 4}};
+    r.ar_field = {{"value", 4}};
     r.timestamp = 1698894500008;
 
-    DBRecord<QString> rs;
+    DBRecord<> rs;
     rs.measurement = "snvs";
     rs.tag = {{"name", "pl"}};
-    rs.field = {{"value", "12"}};
+    rs.ar_field = {{"mood", 5}},
+    rs.str_field = {{"value", "12"}};
     rs.timestamp = 1698894500009;
     ix.addData(r);
     ix.addData(rs);
