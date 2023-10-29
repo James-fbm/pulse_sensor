@@ -1,6 +1,6 @@
 #include "influxdb.h"
 
-InfluxDB::InfluxDB() {
+InfluxDB::InfluxDB(quint32 size): buf_size(size), count(0) {
     getConfig();
     makeRequest();
 }
@@ -45,30 +45,9 @@ void InfluxDB::makeRequest() {
     QString token = QString("Token ") + this->config.token;
     this->request.setRawHeader("Authorization", token.toUtf8());
 
-    /*
-    QByteArray data = "weather,location=us-midwest temperature=82 1697894400006";
-    QNetworkReply *reply = this->manager.post(this->request, data);
-
-    qDebug() << "connect";
-    // 使用事件循环等待请求完成
-    QEventLoop loop;
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
-
-    // 输出响应
-    if (reply->error() == QNetworkReply::NoError) {
-        qDebug() << "Success:" << reply->readAll();
-    } else {
-        qDebug() << "Error:" << reply->errorString();
-    }
-
-    // 删除reply对象
-    reply->deleteLater();
-    qDebug() << "reply" << reply->error();
-    */
 }
 
-void InfluxDB::sendData(QString data) {
+void InfluxDB::sendData(QString& data) {
     QByteArray bdata = data.toUtf8();
     QNetworkReply *reply = this->manager.post(this->request, bdata);
 
@@ -82,5 +61,61 @@ void InfluxDB::sendData(QString data) {
         qDebug() << "Error:" << reply->errorString();
     }
 
+    qDebug() << this->buffer;
     reply->deleteLater();
+}
+
+void InfluxDB::addData(QString& measurement, QMap<QString, QString>& tag,
+             QMap<QString, QString>& field, QString& timestamp) {
+
+    QString data("");
+
+    data += measurement;
+
+    for (auto t = tag.cbegin(); t != tag.cend() ; ++t) {
+        data += ",";
+        data += t.key();
+        data += "=";
+        data += t.value();
+    }
+
+    data += ' ';
+
+    auto f = field.cbegin();
+    if (f == field.cend()) {
+
+    } else {
+        data += f.key();
+        data += "=";
+        data += f.value();
+        ++f;
+        for (; f != field.cend() ; ++f) {
+            data += ',';
+            data += f.key();
+            data += "=";
+            data += f.value();
+        }
+    }
+
+    data += ' ';
+    data += timestamp;
+    data += '\n';
+
+    this->buffer += data;
+    this->count += 1;
+
+    if (this->count == this->buf_size) {
+        this->sendData(this->buffer);
+        this->count = 0;
+        this->buffer = "";
+    }
+}
+
+void InfluxDB::addDataR(DBRecord<QString>& record) {
+    // Specialized implementation for QString
+    qDebug() << "QString record";
+}
+
+const QString& InfluxDB::getBuffer() {
+    return this->buffer;
 }
