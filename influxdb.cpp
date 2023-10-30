@@ -81,59 +81,34 @@ void InfluxDB::sendData(QString& data) {
     reply->deleteLater();
 }
 
+void InfluxDB::addData(DBRecord& record) {
+    this->buffer += record.measurement;
+    if (record.tag.size() != 0) {
+        this->buffer += ',';
+    }
+    this->buffer += record.tag;
+    this->buffer += ' ';                        // split measurement + tag with field
+    this->buffer += record.field;
+    if (record.field.size() != 0) {
+        this->buffer +=  ' ';
+    }
+    this->buffer += record.timestamp;
+}
 
-//void InfluxDB::addData(DBRecord<QString>& record) {
+const QString& InfluxDB::getBuffer() {
+    return this->buffer;
+}
 
-//    // Specialized implementation for QString
-//    QString data("");
 
-//    data += record.measurement;
+void DBRecord::addTagPair(QString key, QString value) {}
 
-//    // add tag keys and values
-//    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
-//        data += ",";
-//        data += t.key();
-//        data += "=";
-//        data += t.value();
-//    }
-
-//    data += ' ';
-
-//    // add field keys and values
-//    auto f = record.field.cbegin();
-//    if (f == record.field.cend()) {
-
-//    } else {
-//        data += f.key();
-//        data += "=\"";          // string value needs to be surrounded by `"`
-//        data += f.value();
-//        data += '\"';
-//        ++f;
-//        for (; f != record.field.cend() ; ++f) {
-//            data += ',';
-//            data += f.key();
-//            data += "=\"";          // string value needs to be surrounded by `"`
-//            data += f.value();
-//            data += '\"';
-//        }
-//        data += ' ';
-//    }
-
-//    data += QString::number(record.timestamp);
-//    data += '\n';
-
-//    this->buffer += data;
-//    this->count += 1;
-
-//    // if buffer is full, send an Http request
-//    if (this->count == this->buf_size) {
-//        this->sendData(this->buffer);
-//        this->count = 0;
-//        this->buffer = "";
-//    }
-//}
-
-//const QString& InfluxDB::getBuffer() {
-//    return this->buffer;
-//}
-
+QString& DBRecord::getMeasurement() { return this->measurement; }
+QString& DBRecord::getTag() { return this->tag; }
+QString& DBRecord::getField() { return this->field; }
+QString& DBRecord::getTimestampString() { return this->timestamp; }
+quint64 DBRecord::getTimestamp() { return this->timestamp.toULongLong(); }
+void DBRecord::setMeasurement(QString measurement) {}
+void DBRecord::setTag(QString tag){}
+void DBRecord::setField(QString field) {}
+void DBRecord::setTimestamp(quint64 timestamp) {}
+void DBRecord::setTimestampString(QString timestamp) {}
