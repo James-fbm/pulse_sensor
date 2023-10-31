@@ -33,17 +33,19 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    InfluxDB ix(2);
+    InfluxDB ix(1);
 
     DBRecord r;
-    r.setMeasurement("snvd");
-    r.addTagPair("name", "gcq");
-    r.addFieldPair("value", 6);
+    r.setMeasurement("snvds");
+    r.addTagPair({"name", "gcq"});
+    r.addTagPair({"local", "Cangzhou"});
+    r.addFieldPair<QString>({"value", "6"});
+    r.addFieldPair<QString>({"mood", "good"});
+    r.addFieldPair<double>({"gpa", 4.999});
     r.setTimestamp(1698894500008);
 
     ix.addData(r);
 
-    qDebug() << ix.getBuffer();
     return a.exec();
 }
 

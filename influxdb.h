@@ -8,7 +8,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QString>
-#include <QMap>
+#include <QPair>
 #include <QObject>
 #include <QByteArray>
 #include <QFile>
@@ -29,7 +29,7 @@ struct DBConfig {
 };
 
 // map to single record in InfluxDB
-struct DBRecord {
+class DBRecord {
     QString measurement;                // measurement should be a string
     QString tag;                        // key and value of a tag should be strings
     QString field;                      // key of a field should be string;
@@ -37,19 +37,28 @@ struct DBRecord {
     QString timestamp;                  // timestamp should be an unsigned long
 
 public:
-    void addTagPair(QString key, QString value);
+    void addTagPair(QPair<QString, QString>& pair);
+    void addTagPair(QPair<QString, QString>&& pair);
     template<typename T>
-    void addFieldPair(QString key, T value);
+    void addFieldPair(QPair<QString, T>& pair);
+    template<typename T>
+    void addFieldPair(QPair<QString, T>&& pair);
+    void addFieldPair(QPair<QString, QString>& pair);
+    void addFieldPair(QPair<QString, QString>&& pair);
 
     QString& getMeasurement();
     QString& getTag();
     QString& getField();
     QString& getTimestampString();
     quint64 getTimestamp();
-    void setMeasurement(QString measureme);
-    void setTag(QString tag);
-    void setField(QString field);
-    void setTimestampString(QString timestamp);
+    void setMeasurement(QString& measureme);
+    void setMeasurement(QString&& measureme);
+    void setTag(QString& tag);
+    void setTag(QString&& tag);
+    void setField(QString& field);
+    void setField(QString&& field);
+    void setTimestampString(QString& timestamp);
+    void setTimestampString(QString&& timestamp);
     void setTimestamp(quint64 timestamp);
 };
 
@@ -76,4 +85,19 @@ public:
 };
 
 template<typename T>
-void DBRecord::addFieldPair(QString key, T value) {}
+void DBRecord::addFieldPair(QPair<QString, T>& pair) {
+    static_assert(std::is_arithmetic<T>::value,
+            "Field values only accept arithmetic and string types.");
+    if (this->field.size() != 0) {
+        this->field += ',';
+    }
+    this->field += pair.first;
+    this->field += '=';
+    this->field += QString::number(pair.second);
+}
+
+
+template<typename T>
+void DBRecord::addFieldPair(QPair<QString, T>&& pair) {
+    this->addFieldPair(pair);
+}

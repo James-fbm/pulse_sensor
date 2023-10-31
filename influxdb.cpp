@@ -69,7 +69,7 @@ void InfluxDB::sendData(QString& data) {
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    qDebug() << "Sent data: " << this->buffer << "bytes";
+    qDebug() << "Sent data: " << this->buffer;
 
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "Success:" << reply->readAll();
@@ -82,17 +82,24 @@ void InfluxDB::sendData(QString& data) {
 }
 
 void InfluxDB::addData(DBRecord& record) {
-    this->buffer += record.measurement;
-    if (record.tag.size() != 0) {
+    this->buffer += record.getMeasurement();
+    if (record.getTag().size() != 0) {
         this->buffer += ',';
     }
-    this->buffer += record.tag;
+    this->buffer += record.getTag();
     this->buffer += ' ';                        // split measurement + tag with field
-    this->buffer += record.field;
-    if (record.field.size() != 0) {
+    this->buffer += record.getField();
+    if (record.getField().size() != 0) {
         this->buffer +=  ' ';
     }
-    this->buffer += record.timestamp;
+    this->buffer += record.getTimestampString();
+    ++this->count;
+
+    if (this->count >= this->buf_size) {
+        this->sendData(this->buffer);
+        this->buffer = "";
+        this->count = 0;
+    }
 }
 
 const QString& InfluxDB::getBuffer() {
@@ -100,15 +107,63 @@ const QString& InfluxDB::getBuffer() {
 }
 
 
-void DBRecord::addTagPair(QString key, QString value) {}
+void DBRecord::addFieldPair(QPair<QString, QString>& pair) {
+    if (this->field.size() != 0) {
+        this->field += ',';
+    }
+    this->field += pair.first;
+    this->field += '=';
+    this->field += '\"';
+    this->field += pair.second;
+    this->field += '\"';
+}
+
+void DBRecord::addFieldPair(QPair<QString, QString>&& pair) {
+    this->addFieldPair(pair);
+}
+
+void DBRecord::addTagPair(QPair<QString, QString>& pair) {
+    if (this->tag.size() != 0) {
+        this->tag += ',';
+    }
+    this->tag += pair.first;
+    this->tag += '=';
+    this->tag += pair.second;
+}
+
+void DBRecord::addTagPair(QPair<QString, QString>&& pair) {
+    this->addTagPair(pair);
+}
 
 QString& DBRecord::getMeasurement() { return this->measurement; }
 QString& DBRecord::getTag() { return this->tag; }
 QString& DBRecord::getField() { return this->field; }
 QString& DBRecord::getTimestampString() { return this->timestamp; }
 quint64 DBRecord::getTimestamp() { return this->timestamp.toULongLong(); }
-void DBRecord::setMeasurement(QString measurement) {}
-void DBRecord::setTag(QString tag){}
-void DBRecord::setField(QString field) {}
-void DBRecord::setTimestamp(quint64 timestamp) {}
-void DBRecord::setTimestampString(QString timestamp) {}
+void DBRecord::setMeasurement(QString& measurement) {
+    this->measurement = measurement;
+}
+void DBRecord::setMeasurement(QString&& measurement) {
+    this->setMeasurement(measurement);
+}
+void DBRecord::setTag(QString& tag){
+    this->tag = tag;
+}
+void DBRecord::setTag(QString&& tag){
+    this->setTag(tag);
+}
+void DBRecord::setField(QString& field) {
+    this->field = field;
+}
+void DBRecord::setField(QString&& field) {
+    this->setField(field);
+}
+void DBRecord::setTimestampString(QString& timestamp) {
+    this->timestamp = timestamp;
+}
+void DBRecord::setTimestampString(QString&& timestamp) {
+    this->setTimestampString(timestamp);
+}
+void DBRecord::setTimestamp(quint64 timestamp) {
+    this->setTimestampString(QString::number(timestamp));
+}
