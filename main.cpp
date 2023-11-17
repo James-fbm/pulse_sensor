@@ -28,23 +28,67 @@ int main(int argc, char *argv[])
 
 
 #include "influxdb.h"
-#include <QCoreApplication>
+#include "Bluetooth.h"
+#include <QApplication>
+#include "HeartRateMonitor.h"
+#include "datasource.h"
+#include <QQuickView>
+#include <QtWidgets/QApplication>
+#include <QtQml/QQmlContext>
+#include <QtQuick/QQuickView>
+#include <QtQml/QQmlEngine>
+#include <QtCore/QDir>
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-    InfluxDB ix(1);
+    QApplication a(argc, argv);
+//    InfluxDB ix(2);
 
-    DBRecord r;
-    r.setMeasurement("snvds");
-    r.addTagPair({"name", "gcq"});
-    r.addTagPair({"local", "Cangzhou"});
-    r.addFieldPair<QString>({"value", "6"});
-    r.addFieldPair<QString>({"mood", "good"});
-    r.addFieldPair<double>({"gpa", 4.999});
-    r.setTimestamp(1698894500008);
+//    DBRecord<quint32> r;
+//    r.measurement = "snvd";
+//    r.tag = {{"name", "pl"}};
+//    r.ar_field = {{"value", 4}};
+//    r.timestamp = 1698894500008;
 
-    ix.addData(r);
+//    DBRecord<> rs;
+//    rs.measurement = "snvs";
+//    rs.tag = {{"name", "pl"}};
+//    rs.ar_field = {{"mood", 5}},
+//    rs.str_field = {{"value", "12"}};
+//    rs.timestamp = 1698894500009;
+//    ix.addData(r);
+//    ix.addData(rs);
+
+    BluetoothServer server;
+
+//    HeartRateMonitor monitor;
+
+//    QObject::connect(&server, &BluetoothServer::heartRateReceived,
+//                     &monitor, &HeartRateMonitor::updateHeartRate);
+
+//    monitor.show();
+    QString extraImportPath(QStringLiteral("%1/../../../%2"));
+
+    QQuickView viewer;
+
+    viewer.engine()->addImportPath(extraImportPath.arg(QGuiApplication::applicationDirPath(),
+                                      QString::fromLatin1("qml")));
+    QObject::connect(viewer.engine(), &QQmlEngine::quit, &viewer, &QWindow::close);
+
+    viewer.setTitle(QStringLiteral("QML Oscilloscope"));
+
+
+    DataSource dataSource(&viewer);
+    viewer.rootContext()->setContextProperty("dataSource", &dataSource);
+
+    viewer.setSource(QUrl("qrc:/qml/qmloscilloscope/main.qml"));
+    viewer.setResizeMode(QQuickView::SizeRootObjectToView);
+    viewer.setColor(QColor("#404040"));
+    viewer.show();
+
+    QObject::connect(&server, &BluetoothServer::heartRateReceived,
+                     &dataSource, &DataSource::updateHeartRate);
+
 
     return a.exec();
 }

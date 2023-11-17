@@ -1,19 +1,31 @@
 QT += quick
 QT += network
+QT += charts qml quick
 
 CONFIG += c++11
 CONFIG += console
+QT += core bluetooth
+QT += bluetooth
+QT += core gui widgets
+QT += charts
+
+
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        Bluetooth.cpp \
+        HeartRateMonitor.cpp \
+        datasource.cpp \
         influxdb.cpp \
         main.cpp
 
 RESOURCES += qml.qrc \
-    config.qrc
+          Bluetooth.cpp \
+          resources.qrc \
+          config.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -27,6 +39,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    Bluetooth.h \
+    HeartRateMonitor.h \
+    datasource.h \
     influxdb.h
 
 DISTFILES +=
