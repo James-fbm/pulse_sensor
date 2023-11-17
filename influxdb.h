@@ -8,7 +8,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QString>
-#include <QMap>
+#include <QPair>
 #include <QObject>
 #include <QByteArray>
 #include <QFile>
@@ -29,14 +29,37 @@ struct DBConfig {
 };
 
 // map to single record in InfluxDB
-template<typename T = double>
-struct DBRecord {
+class DBRecord {
     QString measurement;                // measurement should be a string
-    QMap<QString, QString> tag;         // key and value of a tag should be strings
-    QMap<QString, T> ar_field;          // key of a field should be string;
-    QMap<QString, QString> str_field;   // value of a field can be arithmetic types or string
-    quint64 timestamp;                  // timestamp should be an unsigned long
+    QString tag;                        // key and value of a tag should be strings
+    QString field;                      // key of a field should be string;
+                                        // value of a field can be arithmetic types or string
+    QString timestamp;                  // timestamp should be an unsigned long
 
+public:
+    void addTagPair(QPair<QString, QString>& pair);
+    void addTagPair(QPair<QString, QString>&& pair);
+    template<typename T>
+    void addFieldPair(QPair<QString, T>& pair);
+    template<typename T>
+    void addFieldPair(QPair<QString, T>&& pair);
+    void addFieldPair(QPair<QString, QString>& pair);
+    void addFieldPair(QPair<QString, QString>&& pair);
+
+    QString& getMeasurement();
+    QString& getTag();
+    QString& getField();
+    QString& getTimestampString();
+    quint64 getTimestamp();
+    void setMeasurement(QString& measureme);
+    void setMeasurement(QString&& measureme);
+    void setTag(QString& tag);
+    void setTag(QString&& tag);
+    void setField(QString& field);
+    void setField(QString&& field);
+    void setTimestampString(QString& timestamp);
+    void setTimestampString(QString&& timestamp);
+    void setTimestamp(quint64 timestamp);
 };
 
 class InfluxDB {
@@ -57,85 +80,24 @@ private:
 public:
     InfluxDB(quint32 size = 512);
     ~InfluxDB();
-    template<typename T>
-    void addData(DBRecord<T>& record);
+    void addData(DBRecord& record);
     const QString& getBuffer();
 };
 
-
-// This definition has to be put in a header file, or there will be a compilation error
 template<typename T>
-void InfluxDB::addData(DBRecord<T>& record) {
-
+void DBRecord::addFieldPair(QPair<QString, T>& pair) {
     static_assert(std::is_arithmetic<T>::value,
-            "Type T should be an arithmetic type");
-
-    // Implementation for arithemtic types
-    QString data("");
-
-    data += record.measurement;
-
-    // Add tag keys and values
-    for (auto titer = record.tag.cbegin(); titer != record.tag.cend() ; ++titer) {
-        data += ",";
-        data += titer.key();
-        data += "=";
-        data += titer.value();
+            "Field values only accept arithmetic and string types.");
+    if (this->field.size() != 0) {
+        this->field += ',';
     }
+    this->field += pair.first;
+    this->field += '=';
+    this->field += QString::number(pair.second);
+}
 
-    // End of measurement and tag segment
-    data += ' ';
 
-    // Add field keys and values
-    auto ar_fiter = record.ar_field.cbegin();
-    auto str_fiter = record.str_field.cbegin();
-    bool has_field = true;
-
-    // According to the data format, field segment should begin with a valid K-V pair
-    if (ar_fiter != record.ar_field.cend()) {
-        data += ar_fiter.key();
-        data += "=";
-        data += QString::number(ar_fiter.value());
-        ++ar_fiter;
-    } else if (str_fiter != record.str_field.cend()) {
-        data += str_fiter.key();
-        data += "=\"";                  // string value needs to be surrounded by `"`
-        data += str_fiter.value();
-        data += '\"';
-        ++str_fiter;
-    } else {
-        has_field = false;
-    }
-
-    for (; ar_fiter != record.ar_field.cend() ; ++ar_fiter) {
-        data += ',';
-        data += ar_fiter.key();
-        data += "=";
-        data += QString::number(ar_fiter.value());
-    }
-
-    for (; str_fiter != record.str_field.cend() ; ++str_fiter) {
-        data += ',';
-        data += str_fiter.key();
-        data += "=\"";                  // string value needs to be surrounded by `"`
-        data += str_fiter.value();
-        data += '\"';
-    }
-
-    // End of field segment. If no field to be written, a new space should be ignored
-    if (has_field)
-        data += ' ';
-
-    data += QString::number(record.timestamp);
-    data += '\n';
-
-    this->buffer += data;
-    this->count += 1;
-
-    // if buffer is full, send an Http request
-    if (this->count == this->buf_size) {
-        this->sendData(this->buffer);
-        this->count = 0;
-        this->buffer = "";
-    }
+template<typename T>
+void DBRecord::addFieldPair(QPair<QString, T>&& pair) {
+    this->addFieldPair(pair);
 }

@@ -58,7 +58,6 @@ void InfluxDB::makeRequest() {
 }
 
 void InfluxDB::sendData(QString& data) {
-
     // See the request data format at https://docs.influxdata.com/influxdb/v2/write-data/developer-tools/api/
     // The `data` variable represents the --data-binary part of the curl command.
     // Use QString for flexibility
@@ -69,7 +68,7 @@ void InfluxDB::sendData(QString& data) {
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    qDebug() << "Sent data: " << this->buffer << "bytes";
+    qDebug() << "Sent data: " << this->buffer;
 
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "Success:" << reply->readAll();
@@ -81,59 +80,89 @@ void InfluxDB::sendData(QString& data) {
     reply->deleteLater();
 }
 
+void InfluxDB::addData(DBRecord& record) {
+    this->buffer += record.getMeasurement();
+    if (record.getTag().size() != 0) {
+        this->buffer += ',';
+    }
+    this->buffer += record.getTag();
+    this->buffer += ' ';                        // split measurement + tag with field
+    this->buffer += record.getField();
+    if (record.getField().size() != 0) {
+        this->buffer +=  ' ';
+    }
+    this->buffer += record.getTimestampString();
+    ++this->count;
 
-//void InfluxDB::addData(DBRecord<QString>& record) {
+    if (this->count >= this->buf_size) {
+        this->sendData(this->buffer);
+        this->buffer = "";
+        this->count = 0;
+    }
+}
 
-//    // Specialized implementation for QString
-//    QString data("");
+const QString& InfluxDB::getBuffer() {
+    return this->buffer;
+}
 
-//    data += record.measurement;
 
-//    // add tag keys and values
-//    for (auto t = record.tag.cbegin(); t != record.tag.cend() ; ++t) {
-//        data += ",";
-//        data += t.key();
-//        data += "=";
-//        data += t.value();
-//    }
+void DBRecord::addFieldPair(QPair<QString, QString>& pair) {
+    if (this->field.size() != 0) {
+        this->field += ',';
+    }
+    this->field += pair.first;
+    this->field += '=';
+    this->field += '\"';
+    this->field += pair.second;
+    this->field += '\"';
+}
 
-//    data += ' ';
+void DBRecord::addFieldPair(QPair<QString, QString>&& pair) {
+    this->addFieldPair(pair);
+}
 
-//    // add field keys and values
-//    auto f = record.field.cbegin();
-//    if (f == record.field.cend()) {
+void DBRecord::addTagPair(QPair<QString, QString>& pair) {
+    if (this->tag.size() != 0) {
+        this->tag += ',';
+    }
+    this->tag += pair.first;
+    this->tag += '=';
+    this->tag += pair.second;
+}
 
-//    } else {
-//        data += f.key();
-//        data += "=\"";          // string value needs to be surrounded by `"`
-//        data += f.value();
-//        data += '\"';
-//        ++f;
-//        for (; f != record.field.cend() ; ++f) {
-//            data += ',';
-//            data += f.key();
-//            data += "=\"";          // string value needs to be surrounded by `"`
-//            data += f.value();
-//            data += '\"';
-//        }
-//        data += ' ';
-//    }
+void DBRecord::addTagPair(QPair<QString, QString>&& pair) {
+    this->addTagPair(pair);
+}
 
-//    data += QString::number(record.timestamp);
-//    data += '\n';
-
-//    this->buffer += data;
-//    this->count += 1;
-
-//    // if buffer is full, send an Http request
-//    if (this->count == this->buf_size) {
-//        this->sendData(this->buffer);
-//        this->count = 0;
-//        this->buffer = "";
-//    }
-//}
-
-//const QString& InfluxDB::getBuffer() {
-//    return this->buffer;
-//}
-
+QString& DBRecord::getMeasurement() { return this->measurement; }
+QString& DBRecord::getTag() { return this->tag; }
+QString& DBRecord::getField() { return this->field; }
+QString& DBRecord::getTimestampString() { return this->timestamp; }
+quint64 DBRecord::getTimestamp() { return this->timestamp.toULongLong(); }
+void DBRecord::setMeasurement(QString& measurement) {
+    this->measurement = measurement;
+}
+void DBRecord::setMeasurement(QString&& measurement) {
+    this->setMeasurement(measurement);
+}
+void DBRecord::setTag(QString& tag){
+    this->tag = tag;
+}
+void DBRecord::setTag(QString&& tag){
+    this->setTag(tag);
+}
+void DBRecord::setField(QString& field) {
+    this->field = field;
+}
+void DBRecord::setField(QString&& field) {
+    this->setField(field);
+}
+void DBRecord::setTimestampString(QString& timestamp) {
+    this->timestamp = timestamp;
+}
+void DBRecord::setTimestampString(QString&& timestamp) {
+    this->setTimestampString(timestamp);
+}
+void DBRecord::setTimestamp(quint64 timestamp) {
+    this->setTimestampString(QString::number(timestamp));
+}
