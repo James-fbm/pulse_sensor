@@ -23,7 +23,6 @@ SOURCES += \
         main.cpp
 
 RESOURCES += qml.qrc \
-          Bluetooth.cpp \
           resources.qrc \
           config.qrc
 
@@ -44,4 +43,4 @@ HEADERS += \
     datasource.h \
     influxdb.h
 
-DISTFILES +=
+DISTFILES += OTHER_FILES
