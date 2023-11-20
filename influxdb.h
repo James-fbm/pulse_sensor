@@ -46,10 +46,10 @@ public:
     void addFieldPair(QPair<QString, QString>& pair);
     void addFieldPair(QPair<QString, QString>&& pair);
 
-    QString& getMeasurement();
-    QString& getTag();
-    QString& getField();
-    QString& getTimestampString();
+    const QString& getMeasurement();
+    const QString& getTag();
+    const QString& getField();
+    const QString& getTimestampString();
     quint64 getTimestamp();
     void setMeasurement(QString& measureme);
     void setMeasurement(QString&& measureme);

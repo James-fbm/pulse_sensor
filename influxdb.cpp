@@ -134,10 +134,10 @@ void DBRecord::addTagPair(QPair<QString, QString>&& pair) {
     this->addTagPair(pair);
 }
 
-QString& DBRecord::getMeasurement() { return this->measurement; }
-QString& DBRecord::getTag() { return this->tag; }
-QString& DBRecord::getField() { return this->field; }
-QString& DBRecord::getTimestampString() { return this->timestamp; }
+const QString& DBRecord::getMeasurement() { return this->measurement; }
+const QString& DBRecord::getTag() { return this->tag; }
+const QString& DBRecord::getField() { return this->field; }
+const QString& DBRecord::getTimestampString() { return this->timestamp; }
 quint64 DBRecord::getTimestamp() { return this->timestamp.toULongLong(); }
 void DBRecord::setMeasurement(QString& measurement) {
     this->measurement = measurement;

@@ -28,42 +28,58 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Controls 1.0
-import QtQuick.Controls.Styles 1.0
+import QtCharts 2.1
 
-Item {
-    id: button
+//![1]
+ChartView {
+    id: chartView
+    animationOptions: ChartView.NoAnimation
+    theme: ChartView.ChartThemeDark
 
-    property string text: "Option: "
-    property variant items: ["first"]
-    property int currentSelection: 0
-    signal selectionChanged(variant selection)
+    ValueAxis {
+        id: axisY
+        min: 95
+        max: 150
+    }
 
-    signal clicked
 
-    implicitWidth: buttonText.implicitWidth + 5
-    implicitHeight: buttonText.implicitHeight + 10
+    ValueAxis {
+        id: axisX
+        min: 0
+        max: 60
+    }
 
-    Button {
-        id: buttonText
-        width: parent.width
-        height: parent.height
+    LineSeries {
+        id: lineSeries
+        name: "Signal Strength"
+        axisX: axisX
+        axisY: axisY
+        useOpenGL: true
+    }
 
-        style: ButtonStyle {
-            label: Component {
-                Text {
-                    text: button.text + button.items[currentSelection]
-                    clip: true
-                    wrapMode: Text.WordWrap
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    anchors.fill: parent
-                }
-            }
-        }
-        onClicked: {
-            currentSelection = (currentSelection + 1) % items.length;
-            selectionChanged(button.items[currentSelection]);
+
+    Timer {
+        id: refreshTimer
+        // interval: 1 / 60 * 1000 // 60 Hz
+        interval: 1 / 3 * 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            dataSource.update(chartView.series(0));
+            dataSource.update(chartView.series(1));
+            updateXAxisRange(); // 更新X轴的范围
         }
     }
+
+    function updateXAxisRange() {
+        // 此处我们假设数据是连续的，并且以固定的速率生成
+        // 更新X轴的范围以显示最新的数据点
+        // 例如，如果每次刷新时您都添加一个新的数据点
+        var lastXValue = lineSeries.at(lineSeries.count - 1).x; // 获取最后一个数据点的X值
+        if (lastXValue > axisX.max) {
+            axisX.min = lastXValue - 60; // 保持显示的范围为60个单位
+            axisX.max = lastXValue;
+        }
+    }
+
 }

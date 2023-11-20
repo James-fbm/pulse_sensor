@@ -63,6 +63,7 @@ void DataSource::update(QAbstractSeries *series)
             m_index = 0;
 
         QVector<QPointF> points = m_data.at(m_index);
+
         // Use replace instead of clear + append, it's optimized for performance
         xySeries->replace(points);
     }

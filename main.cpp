@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
 
 #include "influxdb.h"
-#include "Bluetooth.h"
+#include "bluetooth.h"
 #include <QApplication>
 #include "HeartRateMonitor.h"
 #include "datasource.h"
@@ -67,15 +67,15 @@ int main(int argc, char *argv[])
 //                     &monitor, &HeartRateMonitor::updateHeartRate);
 
 //    monitor.show();
-    QString extraImportPath(QStringLiteral("%1/../../../%2"));
+    // QString extraImportPath(QStringLiteral("%1/../../../%2"));
 
     QQuickView viewer;
 
-    viewer.engine()->addImportPath(extraImportPath.arg(QGuiApplication::applicationDirPath(),
-                                      QString::fromLatin1("qml")));
+    //viewer.engine()->addImportPath(extraImportPath.arg(QGuiApplication::applicationDirPath(),
+    //                                  QString::fromLatin1("qml")));
     QObject::connect(viewer.engine(), &QQmlEngine::quit, &viewer, &QWindow::close);
 
-    viewer.setTitle(QStringLiteral("QML Oscilloscope"));
+    viewer.setTitle(QStringLiteral("ECG Monitor"));
 
 
     DataSource dataSource(&viewer);

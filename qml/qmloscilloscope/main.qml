@@ -28,53 +28,70 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQuick.Window 2.2
+import QtQuick.Layouts 1.15
 
-//![1]
 Item {
     id: main
-    width: 600
-    height: 400
+    width: Screen.width / 2
+    height: width / 2
+
+    property var displayView: controlPanel.displayState
+
+    Component.onCompleted: {
+        changeMainLayout()
+    }
 
     ControlPanel {
         id: controlPanel
         anchors.top: parent.top
         anchors.topMargin: 10
         anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.leftMargin: 10
-//![1]
 
-//        onSignalSourceChanged: {
-//            if (source == "sin")
-//                dataSource.generateData(0, signalCount, sampleCount);
-//            else
-//                dataSource.generateData(1, signalCount, sampleCount);
-//            scopeView.axisX().max = sampleCount;
-//        }
-        onSeriesTypeChanged: scopeView.changeSeriesType(type);
-        onRefreshRateChanged: scopeView.changeRefreshRate(rate);
-        onAntialiasingEnabled: scopeView.antialiasing = enabled;
-        onOpenGlChanged: {
-            scopeView.openGL = enabled;
+        onDisplayStateChanged: {
+            parent.displayView = displayState
+            parent.changeMainLayout()
         }
     }
 
-//![2]
-    ScopeView {
-        id: scopeView
+
+    ECGView {
+        id: ecgView
         anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.left: controlPanel.right
+        visible: parent.displayView[0] // 直接绑定
+    }
+
+    HRView {
+        id: hrView
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.left: controlPanel.right
-        height: main.height
+        visible: parent.displayView[1] // 直接绑定
+    }
 
-        onOpenGLSupportedChanged: {
-            if (!openGLSupported) {
-                controlPanel.openGLButton.enabled = false
-                controlPanel.openGLButton.currentSelection = 0
+
+    function changeMainLayout() {
+        if (ecgView.visible || hrView.visible) {
+            controlPanel.anchors.horizontalCenter = undefined
+            controlPanel.anchors.left = main.left
+            controlPanel.anchors.leftMargin = 10
+
+            if (ecgView.visible && !hrView.visible) {
+                ecgView.anchors.bottom = main.bottom
+            } else if (!ecgView.visible && hrView.visible) {
+                hrView.anchors.top = main.top
+            } else  {
+                ecgView.anchors.bottom = main.verticalCenter
+                hrView.anchors.top = main.verticalCenter
             }
+
+        } else {
+            // these three commands should be put strictly in this sequence.
+            controlPanel.anchors.left = undefined
+            controlPanel.anchors.leftMargin = undefined
+            controlPanel.anchors.horizontalCenter = main.horizontalCenter
         }
     }
-//![2]
-
 }

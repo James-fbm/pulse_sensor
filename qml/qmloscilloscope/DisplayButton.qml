@@ -28,53 +28,38 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Layouts 1.15
+import QtQuick.Controls 1.0
+import QtQuick.Controls.Styles 1.0
 
-ColumnLayout {
-    spacing: 8
-    Layout.fillHeight: true
+Item {
+    id: buttonWrapper
 
-    property var displayState: [true, false]
+    property string text
+    signal clicked()
 
-    Text {
-        text: "Display"
-        font.pointSize: 18
-        color: "white"
-    }
+    implicitWidth: button.implicitWidth + 5
+    implicitHeight: button.implicitHeight + 10
 
-    DisplayButton {
-        id: ecgButton
-        text: "ECG"
+    Button {
+        id: button
+        width: parent.width
+        height: parent.height
 
-        onClicked: {
-            if (parent.displayState[0] === true && parent.displayState[1] === true) {
-                parent.displayState = [true, false]
-            } else if (parent.displayState[0] === true && parent.displayState[1] === false) {
-                parent.displayState = [false, false]
-            } else if (parent.displayState[0] === false && parent.displayState[1] === true) {
-                parent.displayState = [true, true]
-            } else {
-                parent.displayState = [true, false]
-            }
-
-        }
-    }
-
-    DisplayButton {
-        id: heartRateButton
-        text: "HR"
-
-        onClicked: {
-            if (parent.displayState[0] === true && parent.displayState[1] === true) {
-                parent.displayState = [false, true]
-            } else if (parent.displayState[0] === true && parent.displayState[1] === false) {
-                parent.displayState = [true, true]
-            } else if (parent.displayState[0] === false && parent.displayState[1] === true) {
-                parent.displayState = [false, false]
-            } else {
-                parent.displayState = [false, true]
+        style: ButtonStyle {
+            label: Component {
+                Text {
+                    text: buttonWrapper.text
+                    clip: true
+                    wrapMode: Text.WordWrap
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    anchors.fill: parent
+                }
             }
         }
-    }
 
+        onClicked: {
+            parent.clicked()
+        }
+    }
 }
