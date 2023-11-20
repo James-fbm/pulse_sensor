@@ -49,18 +49,16 @@ Item {
         anchors.bottom: parent.bottom
 
         onDisplayStateChanged: {
-            parent.displayView = displayState
             parent.changeMainLayout()
         }
     }
-
 
     ECGView {
         id: ecgView
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.left: controlPanel.right
-        visible: parent.displayView[0] // 直接绑定
+        visible: parent.displayView[0]
     }
 
     HRView {
@@ -68,11 +66,13 @@ Item {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.left: controlPanel.right
-        visible: parent.displayView[1] // 直接绑定
+        visible: parent.displayView[1]
     }
 
 
     function changeMainLayout() {
+        main.displayView = controlPanel.displayState
+
         if (ecgView.visible || hrView.visible) {
             controlPanel.anchors.horizontalCenter = undefined
             controlPanel.anchors.left = main.left
