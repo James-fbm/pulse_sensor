@@ -35,6 +35,7 @@
 #include <QtCharts/QValueAxis>
 #include <QDateTime>
 #include <QDateTimeAxis>
+#include <QLineSeries>
 #include <QDebug>
 
 
@@ -55,7 +56,7 @@ Q_SIGNALS:
 
 public slots:
     void updateHeartRate(int heartRate);
-    void updateSeries(QAbstractSeries *series);
+    void updateECGSeries(QLineSeries *series);
 
 private:
     QQuickView *appViewer; //A pointer to the QQuickView instance, used to interact with the QML view

@@ -28,13 +28,6 @@
 ****************************************************************************/
 
 #include "datasource.h"
-#include <QtCharts/QXYSeries>
-#include <QtCharts/QAreaSeries>
-#include <QtQuick/QQuickView>
-#include <QtQuick/QQuickItem>
-#include <QtCore/QDebug>
-#include <QtCore/QRandomGenerator>
-#include <QtCore/QtMath>
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -62,28 +55,22 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
 }
 
 
-void DataSource::updateSeries(QAbstractSeries *series)
+void DataSource::updateECGSeries(QLineSeries *series)
 {
     if (series) {
-        QXYSeries *xySeries = static_cast<QXYSeries *>(series); //This line cast the series pointer from the type QAbstractSeries to the type QXYSeries. To manipulate the data, we need to work with a specific series type, QXYSeries in this case, which is used for XY charts
+        series->replace(points);        // update series points
 
-        xySeries->replace(points);
+        // Update axes
+        auto axis = series->attachedAxes();
 
-        // Update the axes range
-        auto axes = xySeries->attachedAxes(); //An XY series typically has two axes, one for the X values and one for the Y values.
-        //.The actual type of axes will be QList<QAbstractAxis *>
+        // mins and maxs are updated in updateHeartRate
+        auto valueAxisX = static_cast<QDateTimeAxis *>(axis[0]);
+        valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
+        valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX),
+                             QDateTime::fromMSecsSinceEpoch(maxX));
 
-        for (QAbstractAxis *axis : axes) {
-            if (axis->orientation() == Qt::Vertical) { // Y轴
-                QValueAxis *valueAxisY = static_cast<QValueAxis *>(axis); //subclass of QAbstractAxis
-                valueAxisY->setRange(minY, maxY);
-            } else if (axis->orientation() == Qt::Horizontal) { // X轴
-                QDateTimeAxis *valueAxisX = static_cast<QDateTimeAxis *>(axis);
-                valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
-                valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX), QDateTime::fromMSecsSinceEpoch(maxX));
-
-            }
-        }
+        auto valueAxisY = static_cast<QValueAxis*>(axis[1]);
+        valueAxisY->setRange(minY, maxY);
     }
 }
 

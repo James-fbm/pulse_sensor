@@ -61,12 +61,13 @@ ChartView {
 
     Timer { // A QML type that triggers an action at regular intervals.
         id: refreshTimer
-        interval: 1 / 30 * 1000
+        interval: 1 / 20 * 1000
         running: true
         repeat: true
         onTriggered: { //The handler that is called every time the timer interval elapses.
-            dataSource.updateSeries(ecgChartView.series(0));
-            dataSource.updateSeries(ecgChartView.series(1));
+//            dataSource.updateSeries(ecgChartView.series(0));
+//            dataSource.updateSeries(ecgChartView.series(1));
+            dataSource.updateECGSeries(lineSeries)
         }
     }
 }
