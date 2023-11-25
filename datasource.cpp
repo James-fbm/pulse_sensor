@@ -54,7 +54,7 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
 }
 
 
-void DataSource::update(QAbstractSeries *series)
+void DataSource::updateSeries(QAbstractSeries *series)
 {
     if (series) {
         QXYSeries *xySeries = static_cast<QXYSeries *>(series); //This line cast the series pointer from the type QAbstractSeries to the type QXYSeries. To manipulate the data, we need to work with a specific series type, QXYSeries in this case, which is used for XY charts
@@ -64,16 +64,16 @@ void DataSource::update(QAbstractSeries *series)
         // Update the axes range
         auto axes = xySeries->attachedAxes(); //An XY series typically has two axes, one for the X values and one for the Y values.
         //.The actual type of axes will be QList<QAbstractAxis *>
-        qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
-        if (newX <= 1024) {
-            newX = 1024;
-        }
 
         for (QAbstractAxis *axis : axes) {
             if (axis->orientation() == Qt::Vertical) { // Y轴
                 QValueAxis *valueAxisY = static_cast<QValueAxis *>(axis); //subclass of QAbstractAxis
                 valueAxisY->setRange(minY, maxY);
             } else if (axis->orientation() == Qt::Horizontal) { // X轴
+                qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
+                if (newX <= 1024) {
+                    newX = 1024;
+                }
                 QValueAxis *valueAxisX = static_cast<QValueAxis *>(axis);
                 valueAxisX->setRange(newX - 1024, newX);
             }

@@ -52,13 +52,11 @@ Q_SIGNALS:
 
 public slots:
     void updateHeartRate(int heartRate);
-    void update(QAbstractSeries *series);
+    void updateSeries(QAbstractSeries *series);
 
 private:
     QQuickView *appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
-    //QList<QVector<QPointF> > m_data; //A list of QVector<QPointF>, which stores data points for the chart.
     QList<QPointF> points;
-    // int m_index;
     qreal minY, maxY;
 };
 

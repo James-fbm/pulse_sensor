@@ -70,43 +70,8 @@ ChartView {
         running: true
         repeat: true
         onTriggered: { //The handler that is called every time the timer interval elapses.
-            dataSource.update(ecgChartView.series(0));
-            dataSource.update(ecgChartView.series(1));
-            //updateXAxisRange(); // 更新X轴的范围
-            //updateYAxisRange();
+            dataSource.updateSeries(ecgChartView.series(0));
+            dataSource.updateSeries(ecgChartView.series(1));
         }
     }
-
-    function updateXAxisRange() {
-        // 此处我们假设数据是连续的，并且以固定的速率生成
-        // 更新X轴的范围以显示最新的数据点
-        // 例如，如果每次刷新时您都添加一个新的数据点
-        var lastXValue = lineSeries.at(lineSeries.count - 1).x; // 获取最后一个数据点的X值
-        if (lastXValue > axisX.max) {
-            axisX.min = lastXValue - 1024; // 保持显示的范围为1024个单位
-            axisX.max = lastXValue;
-        }
-    }
-
-    function updateYAxisRange() {
-        var minY = Number.MAX_VALUE;
-        var maxY = -Number.MAX_VALUE;
-
-        for (var i = 0; i < lineSeries.count; i++) {
-            var point = lineSeries.at(i); // Access each point in the LineSeries
-            minY = Math.min(minY, point.y); // Find the minimum Y value
-            maxY = Math.max(maxY, point.y); // Find the maximum Y value
-        }
-
-        // Add a small margin to the min and max values to ensure that all points are visible
-        var margin = (maxY - minY) * 0.05; // 5% margin
-        minY -= margin;
-        maxY += margin;
-
-        // Update the Y axis range to fit all data points
-        axisY.min = minY;
-        axisY.max = maxY;
-    }
-
-
 }
