@@ -50,7 +50,7 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
 
     // initialize all the X-axis index with a valid timestamp
     for (qint32 i = 0; i < DISPLAYBUFSIZE; ++i) {
-        points.append(QPointF(ms, 0));
+        points.append(QPointF(ms, 100));
     }
 }
 
@@ -74,20 +74,37 @@ void DataSource::updateECGSeries(QLineSeries *series)
     }
 }
 
-void DataSource::updateHeartRate(int heartRate)
+void DataSource::updateHeartRate(qint32 heartRate)
 {
+    // there always will be DISPLAYBUFSIZE elements
+
+    auto oldestPoint = points.front();
+    qint64 dropY = oldestPoint.y();
+    points.pop_front();
+    if (dropY <= minY || dropY >= maxY) {
+        // if dropY reaches boundaries, recalculate minY and maxY
+        minY = std::numeric_limits<qreal>::max();
+        maxY = std::numeric_limits<qreal>::min();
+        for (auto& p: points) {
+            if (minY >= p.y()) {
+                minY = p.y();
+            }
+            if (maxY <= p.y()) {
+                maxY = p.y();
+            }
+        }
+    }
+
+
     // fetch current time as X-axis index
     qint64 ms = QDateTime::currentMSecsSinceEpoch();
-
     points.append(QPointF(ms, heartRate));
-    // there always will be DISPLAYBUFSIZE elements
-    points.pop_front();
 
     minX = points.front().x();
     maxX = points.back().x();
     qDebug() << minX << ' ' << ms;
 
-    qreal newY = heartRate;
+    qint64 newY = heartRate;
     minY = newY < minY ? newY : minY;
     maxY = newY > maxY ? newY : maxY;
 

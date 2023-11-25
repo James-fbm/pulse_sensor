@@ -38,7 +38,6 @@
 #include <QLineSeries>
 #include <QDebug>
 
-
 QT_BEGIN_NAMESPACE
 class QQuickView;
 QT_END_NAMESPACE
@@ -55,13 +54,13 @@ public:
 Q_SIGNALS:
 
 public slots:
-    void updateHeartRate(int heartRate);
+    void updateHeartRate(qint32 heartRate);
     void updateECGSeries(QLineSeries *series);
 
 private:
     QQuickView *appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
     QList<QPointF> points;
-    qreal minX, maxX, minY, maxY;
+    qint64 minX, maxX, minY, maxY;
 };
 
 #endif // DATASOURCE_H
