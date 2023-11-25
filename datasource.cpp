@@ -38,8 +38,8 @@ Q_DECLARE_METATYPE(QAbstractAxis *)
 DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
     QObject(parent),
     appViewer(_appViewer),
-    minY(std::numeric_limits<qreal>::max()),        // reverse initialize in order to guarantee update
-    maxY(std::numeric_limits<qreal>::min())
+    minY(std::numeric_limits<qint64>::max()),        // reverse initialize in order to guarantee update
+    maxY(std::numeric_limits<qint64>::min())
 {
 
     qRegisterMetaType<QAbstractSeries*>();
@@ -83,8 +83,8 @@ void DataSource::updateHeartRate(qint32 heartRate)
     points.pop_front();
     if (dropY <= minY || dropY >= maxY) {
         // if dropY reaches boundaries, recalculate minY and maxY
-        minY = std::numeric_limits<qreal>::max();
-        maxY = std::numeric_limits<qreal>::min();
+        minY = std::numeric_limits<qint64>::max();
+        maxY = std::numeric_limits<qint64>::min();
         for (auto& p: points) {
             if (minY >= p.y()) {
                 minY = p.y();
