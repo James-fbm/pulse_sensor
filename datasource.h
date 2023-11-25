@@ -33,7 +33,7 @@
 #include <QtCore/QObject>
 #include <QtCharts/QAbstractSeries>
 #include <QtCharts/QValueAxis>
-
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 class QQuickView;
@@ -55,9 +55,11 @@ public slots:
     void update(QAbstractSeries *series);
 
 private:
-    QQuickView *m_appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
-    QList<QVector<QPointF> > m_data; //A list of QVector<QPointF>, which stores data points for the chart.
-    int m_index;
+    QQuickView *appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
+    //QList<QVector<QPointF> > m_data; //A list of QVector<QPointF>, which stores data points for the chart.
+    QList<QPointF> points;
+    // int m_index;
+    qreal minY, maxY;
 };
 
 #endif // DATASOURCE_H

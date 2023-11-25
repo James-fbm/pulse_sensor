@@ -40,13 +40,19 @@ ChartView {
         id: axisY
         min: 95
         max: 150
+        labelsVisible: false
+        gridVisible: false
+        tickCount: 2
     }
 
 
     ValueAxis {
         id: axisX
         min: 0
-        max: 60
+        max: 1024
+        labelsVisible: false
+        gridVisible: false
+        tickCount: 2
     }
 
     LineSeries {
@@ -60,7 +66,7 @@ ChartView {
 
     Timer { // A QML type that triggers an action at regular intervals.
         id: refreshTimer
-        interval: 1 / 120 * 1000 // 60 Hz
+        interval: 1 / 60 * 1000 // 60 Hz
         running: true
         repeat: true
         onTriggered: { //The handler that is called every time the timer interval elapses.
@@ -77,7 +83,7 @@ ChartView {
         // 例如，如果每次刷新时您都添加一个新的数据点
         var lastXValue = lineSeries.at(lineSeries.count - 1).x; // 获取最后一个数据点的X值
         if (lastXValue > axisX.max) {
-            axisX.min = lastXValue - 60; // 保持显示的范围为60个单位
+            axisX.min = lastXValue - 1024; // 保持显示的范围为1024个单位
             axisX.max = lastXValue;
         }
     }

@@ -38,6 +38,25 @@ int main(int argc, char *argv[])
 #include <QtQml/QQmlEngine>
 #include <QtCore/QDir>
 
+
+
+#include <QThread>
+
+class MyThread : public QThread {
+public:
+    MyThread(BluetoothServer& server) : server(server) {}
+
+protected:
+    void run() override {
+        server.readSocket();
+    }
+
+private:
+    BluetoothServer& server;  // 假设ServerType是包含readSocket方法的类
+};
+
+
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -62,7 +81,8 @@ int main(int argc, char *argv[])
     QObject::connect(&server, &BluetoothServer::heartRateReceived,
                      &dataSource, &DataSource::updateHeartRate);
 
-
+    MyThread thread(server);
+    thread.start();
     return a.exec();
 }
 
