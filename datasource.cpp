@@ -48,9 +48,17 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
     minY(std::numeric_limits<qreal>::max()),        // reverse initialize in order to guarantee update
     maxY(std::numeric_limits<qreal>::min())
 {
+
     qRegisterMetaType<QAbstractSeries*>();
     qRegisterMetaType<QAbstractAxis*>();
 
+    qint64 ms = QDateTime::currentMSecsSinceEpoch();
+    minX = ms, maxX = ms;
+
+    // initialize all the X-axis index with a valid timestamp
+    for (qint32 i = 0; i < DISPLAYBUFSIZE; ++i) {
+        points.append(QPointF(ms, 0));
+    }
 }
 
 
@@ -70,12 +78,10 @@ void DataSource::updateSeries(QAbstractSeries *series)
                 QValueAxis *valueAxisY = static_cast<QValueAxis *>(axis); //subclass of QAbstractAxis
                 valueAxisY->setRange(minY, maxY);
             } else if (axis->orientation() == Qt::Horizontal) { // X轴
-                qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
-                if (newX <= 1024) {
-                    newX = 1024;
-                }
-                QValueAxis *valueAxisX = static_cast<QValueAxis *>(axis);
-                valueAxisX->setRange(newX - 1024, newX);
+                QDateTimeAxis *valueAxisX = static_cast<QDateTimeAxis *>(axis);
+                valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
+                valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX), QDateTime::fromMSecsSinceEpoch(maxX));
+
             }
         }
     }
@@ -83,19 +89,20 @@ void DataSource::updateSeries(QAbstractSeries *series)
 
 void DataSource::updateHeartRate(int heartRate)
 {
-    qDebug() << heartRate;
+    // fetch current time as X-axis index
+    qint64 ms = QDateTime::currentMSecsSinceEpoch();
 
-    // Add the new point
-    qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
-    points.append(QPointF(newX, heartRate));
+    points.append(QPointF(ms, heartRate));
+    // there always will be DISPLAYBUFSIZE elements
+    points.pop_front();
+
+    minX = points.front().x();
+    maxX = points.back().x();
+    qDebug() << minX << ' ' << ms;
 
     qreal newY = heartRate;
     minY = newY < minY ? newY : minY;
     maxY = newY > maxY ? newY : maxY;
 
-    // Keep only the latest 1024 data points
-    if (points.length() > 1024) {
-        points.pop_front();
-    }
 }
 

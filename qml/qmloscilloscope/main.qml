@@ -33,8 +33,8 @@ import QtQuick.Layouts 1.15
 
 Item {
     id: main
-    width: Screen.width / 2
-    height: width / 2
+    width: Screen.width / 1.5
+    height: width / 4
 
     property var displayView: controlPanel.displayState
 

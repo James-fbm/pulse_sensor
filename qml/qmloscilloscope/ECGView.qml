@@ -38,19 +38,14 @@ ChartView {
 
     ValueAxis {
         id: axisY
-        min: 95
-        max: 150
         labelsVisible: false
         gridVisible: false
         tickCount: 2
     }
 
 
-    ValueAxis {
+    DateTimeAxis {
         id: axisX
-        min: 0
-        max: 1024
-        labelsVisible: false
         gridVisible: false
         tickCount: 2
     }
@@ -66,7 +61,7 @@ ChartView {
 
     Timer { // A QML type that triggers an action at regular intervals.
         id: refreshTimer
-        interval: 1 / 60 * 1000 // 60 Hz
+        interval: 1 / 30 * 1000
         running: true
         repeat: true
         onTriggered: { //The handler that is called every time the timer interval elapses.

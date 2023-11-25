@@ -29,11 +29,14 @@
 
 #ifndef DATASOURCE_H
 #define DATASOURCE_H
-
+#define DISPLAYBUFSIZE 256
 #include <QtCore/QObject>
 #include <QtCharts/QAbstractSeries>
 #include <QtCharts/QValueAxis>
+#include <QDateTime>
+#include <QDateTimeAxis>
 #include <QDebug>
+
 
 QT_BEGIN_NAMESPACE
 class QQuickView;
@@ -57,7 +60,7 @@ public slots:
 private:
     QQuickView *appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
     QList<QPointF> points;
-    qreal minY, maxY;
+    qreal minX, maxX, minY, maxY;
 };
 
 #endif // DATASOURCE_H

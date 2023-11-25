@@ -28,11 +28,12 @@ void BluetoothServer::clientConnected() {
 void BluetoothServer::readSocket() {
 
 #ifdef RANDOMDATAGEN
-
+    int v = 0;
     while (1) {
         int randomNumber = QRandomGenerator::global()->bounded(95, 151);
-        for (int i = 0 ; i < 1000000 ; ++i);
+        for (int i = 0 ; i < 2000000 ; ++i);
         emit heartRateReceived(randomNumber);
+        ++v;
     }
 #else
 

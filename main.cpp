@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     viewer.show();
 
     QObject::connect(&server, &BluetoothServer::heartRateReceived,
-                     &dataSource, &DataSource::updateHeartRate);
+                     &dataSource, &DataSource::updateHeartRate, Qt::DirectConnection);
 
     MyThread thread(server);
     thread.start();
