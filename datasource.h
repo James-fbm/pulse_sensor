@@ -43,7 +43,8 @@ QT_CHARTS_USE_NAMESPACE
 
 class DataSource : public QObject
 {
-    Q_OBJECT
+
+Q_OBJECT
 public:
     explicit DataSource(QQuickView *appViewer, QObject *parent = 0);
 
@@ -54,8 +55,8 @@ public slots:
     void update(QAbstractSeries *series);
 
 private:
-    QQuickView *m_appViewer;
-    QList<QVector<QPointF> > m_data;
+    QQuickView *m_appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
+    QList<QVector<QPointF> > m_data; //A list of QVector<QPointF>, which stores data points for the chart.
     int m_index;
 };
 

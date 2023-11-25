@@ -57,16 +57,47 @@ DataSource::DataSource(QQuickView *appViewer, QObject *parent) :
 void DataSource::update(QAbstractSeries *series)
 {
     if (series) {
-        QXYSeries *xySeries = static_cast<QXYSeries *>(series);
+        QXYSeries *xySeries = static_cast<QXYSeries *>(series); //This line cast the series pointer from the type QAbstractSeries to the type QXYSeries. To manipulate the data, we need to work with a specific series type, QXYSeries in this case, which is used for XY charts
         m_index++;
         if (m_index > m_data.count() - 1)
             m_index = 0;
 
         QVector<QPointF> points = m_data.at(m_index);
-
         // Use replace instead of clear + append, it's optimized for performance
         xySeries->replace(points);
+
+
+
+        // Find the min and max Y values
+        qreal minYValue = std::numeric_limits<qreal>::max();
+        qreal maxYValue = std::numeric_limits<qreal>::min();
+        for (const QPointF &point : qAsConst(points)) {
+            minYValue = qMin(point.y(), minYValue);
+            maxYValue = qMax(point.y(), maxYValue);
+        }
+        qreal margin = (maxYValue - minYValue) * 0.05; // 5% margin
+        minYValue -= margin;
+        maxYValue += margin;
+
+        // Update the axes range
+        auto axes = xySeries->attachedAxes(); //An XY series typically has two axes, one for the X values and one for the Y values.
+        //.The actual type of axes will be QList<QAbstractAxis *>
+        qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
+        if (newX <= 60) {
+            newX = 60;
+        }
+        for (QAbstractAxis *axis : axes) {
+            if (axis->orientation() == Qt::Vertical) { // Y轴
+                QValueAxis *valueAxisY = static_cast<QValueAxis *>(axis); //subclass of QAbstractAxis
+                valueAxisY->setRange(minYValue, maxYValue);
+            } else if (axis->orientation() == Qt::Horizontal) { // X轴
+                QValueAxis *valueAxisX = static_cast<QValueAxis *>(axis);
+                valueAxisX->setRange(newX - 60, newX);
+            }
+        }
     }
+
+
 }
 
 
@@ -74,37 +105,50 @@ void DataSource::updateHeartRate(int heartRate)
 {
     QVector<QPointF> &points = m_data.first();
 
-    // Calculate the new x value as the next integer after the last point's x
-    qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
-
     // Add the new point
+    qreal newX = (points.isEmpty() ? 0 : points.last().x() + 1);
     points.append(QPointF(newX, heartRate));
 
-    // Ensure we only keep the latest 1024 data points
-    if (points.length() > 1024) {
+    // Keep only the latest 1024 data points
+    if (points.length() > 60) {
         points.pop_front();
     }
 
-    // Assuming series is the first series in the chart
-    if (m_appViewer->rootObject()) {
-        QList<QAbstractSeries *> allSeries = m_appViewer->rootObject()->findChildren<QAbstractSeries *>();
-        if (allSeries.size() > 0) {
-            QXYSeries *xySeries = static_cast<QXYSeries *>(allSeries.first());
-            xySeries->replace(points);
+//    // Update the chart with the new data
+//    if (m_appViewer->rootObject()) { //The rootObject is the top-level object in the QML document loaded into the QQuickView
 
+//        auto ecgChartView = m_appViewer->rootObject()->findChild<QObject *>("ecgChartView");// This declares a list to hold pointers to QAbstractSeries objects
 
-            auto axes = xySeries->attachedAxes();
-            for (QAbstractAxis *axis : axes) {
-                if (axis->orientation() == Qt::Vertical) { // Y轴
-                    QValueAxis *valueAxisY = static_cast<QValueAxis *>(axis);
-                    valueAxisY->setRange(95, 150); // 将minYValue和maxYValue替换为您的实际值
-                } else if (axis->orientation() == Qt::Horizontal) { // X轴
-                    QValueAxis *valueAxisX = static_cast<QValueAxis *>(axis);
-                    valueAxisX->setRange(newX - 1024, newX);
-                }
-            }
+//        if (ecgChartView) {
+//            auto seriesList = ecgChartView->findChildren<QAbstractSeries *>();
+//            QXYSeries *xySeries = static_cast<QXYSeries *>(seriesList.first());
+//            xySeries->replace(points);
 
+//            // Find the min and max Y values
+//            qreal minYValue = std::numeric_limits<qreal>::max();
+//            qreal maxYValue = std::numeric_limits<qreal>::min();
+//            for (const QPointF &point : qAsConst(points)) {
+//                minYValue = qMin(point.y(), minYValue);
+//                maxYValue = qMax(point.y(), maxYValue);
+//            }
+//            qreal margin = (maxYValue - minYValue) * 0.05; // 5% margin
+//            minYValue -= margin;
+//            maxYValue += margin;
 
-        }
-    }
+//            // Update the axes range
+//            auto axes = xySeries->attachedAxes(); //An XY series typically has two axes, one for the X values and one for the Y values.
+//            //.The actual type of axes will be QList<QAbstractAxis *>
+
+//            for (QAbstractAxis *axis : axes) {
+//                if (axis->orientation() == Qt::Vertical) { // Y轴
+//                    QValueAxis *valueAxisY = static_cast<QValueAxis *>(axis); //subclass of QAbstractAxis
+//                    valueAxisY->setRange(minYValue, maxYValue);
+//                } else if (axis->orientation() == Qt::Horizontal) { // X轴
+//                    QValueAxis *valueAxisX = static_cast<QValueAxis *>(axis);
+//                    valueAxisX->setRange(newX - 60, newX);
+//                }
+//            }
+//        }
+//    }
 }
+

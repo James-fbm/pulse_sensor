@@ -38,18 +38,27 @@ Item {
 
     property var displayView: controlPanel.displayState
 
+//An initialization block that is called once the component is fully constructed and ready.
     Component.onCompleted: {
         changeMainLayout()
     }
 
     ControlPanel {
         id: controlPanel
+        //Anchors are a way to define the relative positioning of components within their parent components.
         anchors.top: parent.top
         anchors.topMargin: 10
         anchors.bottom: parent.bottom
 
-        onDisplayStateChanged: {
-            parent.changeMainLayout()
+        /*
+        This is a signal handler for the ControlPanel. When the displayState changes in ControlPanel,
+        it triggers the parent.changeMainLayout() function to adjust the layout accordingly.
+        The naming convention for these handlers is on<PropertyName>Changed,
+        where <PropertyName> is the name of the property with the first letter capitalized.
+        */
+
+        onDisplayStateChanged: { //automatically connected to the displayStateChanged signal of the ControlPanel component.
+            parent.changeMainLayout() //when this property changes, the displayStateChanged signal is emitted.
         }
     }
 
@@ -58,7 +67,7 @@ Item {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.left: controlPanel.right
-        visible: parent.displayView[0]
+        visible: parent.displayView[0] //The visible property of ECGView is bound to the displayView property of the main item.
     }
 
     HRView {

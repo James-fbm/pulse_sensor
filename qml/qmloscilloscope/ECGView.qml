@@ -32,7 +32,7 @@ import QtCharts 2.1
 
 //![1]
 ChartView {
-    id: chartView
+    id: ecgChartView
     animationOptions: ChartView.NoAnimation
     theme: ChartView.ChartThemeDark
 
@@ -58,15 +58,16 @@ ChartView {
     }
 
 
-    Timer {
+    Timer { // A QML type that triggers an action at regular intervals.
         id: refreshTimer
-        interval: 1 / 60 * 1000 // 60 Hz
+        interval: 1 / 120 * 1000 // 60 Hz
         running: true
         repeat: true
-        onTriggered: {
-            dataSource.update(chartView.series(0));
-            dataSource.update(chartView.series(1));
-            updateXAxisRange(); // 更新X轴的范围
+        onTriggered: { //The handler that is called every time the timer interval elapses.
+            dataSource.update(ecgChartView.series(0));
+            dataSource.update(ecgChartView.series(1));
+            //updateXAxisRange(); // 更新X轴的范围
+            //updateYAxisRange();
         }
     }
 
@@ -80,5 +81,26 @@ ChartView {
             axisX.max = lastXValue;
         }
     }
+
+    function updateYAxisRange() {
+        var minY = Number.MAX_VALUE;
+        var maxY = -Number.MAX_VALUE;
+
+        for (var i = 0; i < lineSeries.count; i++) {
+            var point = lineSeries.at(i); // Access each point in the LineSeries
+            minY = Math.min(minY, point.y); // Find the minimum Y value
+            maxY = Math.max(maxY, point.y); // Find the maximum Y value
+        }
+
+        // Add a small margin to the min and max values to ensure that all points are visible
+        var margin = (maxY - minY) * 0.05; // 5% margin
+        minY -= margin;
+        maxY += margin;
+
+        // Update the Y axis range to fit all data points
+        axisY.min = minY;
+        axisY.max = maxY;
+    }
+
 
 }

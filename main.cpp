@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 #include "influxdb.h"
 #include "bluetooth.h"
 #include <QApplication>
-#include "HeartRateMonitor.h"
 #include "datasource.h"
 #include <QQuickView>
 #include <QtWidgets/QApplication>
@@ -42,47 +41,21 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-//    InfluxDB ix(2);
-
-//    DBRecord<quint32> r;
-//    r.measurement = "snvd";
-//    r.tag = {{"name", "pl"}};
-//    r.ar_field = {{"value", 4}};
-//    r.timestamp = 1698894500008;
-
-//    DBRecord<> rs;
-//    rs.measurement = "snvs";
-//    rs.tag = {{"name", "pl"}};
-//    rs.ar_field = {{"mood", 5}},
-//    rs.str_field = {{"value", "12"}};
-//    rs.timestamp = 1698894500009;
-//    ix.addData(r);
-//    ix.addData(rs);
 
     BluetoothServer server;
 
-//    HeartRateMonitor monitor;
+    QQuickView viewer; //Creates a QQuickView, which is a window that can display a Qt Quick interface (defined in QML)
 
-//    QObject::connect(&server, &BluetoothServer::heartRateReceived,
-//                     &monitor, &HeartRateMonitor::updateHeartRate);
-
-//    monitor.show();
-    // QString extraImportPath(QStringLiteral("%1/../../../%2"));
-
-    QQuickView viewer;
-
-    //viewer.engine()->addImportPath(extraImportPath.arg(QGuiApplication::applicationDirPath(),
-    //                                  QString::fromLatin1("qml")));
-    QObject::connect(viewer.engine(), &QQmlEngine::quit, &viewer, &QWindow::close);
+    QObject::connect(viewer.engine(), &QQmlEngine::quit, &viewer, &QWindow::close); //Connects the quit signal from the QML engine to close the QQuickView window
 
     viewer.setTitle(QStringLiteral("ECG Monitor"));
 
-
     DataSource dataSource(&viewer);
-    viewer.rootContext()->setContextProperty("dataSource", &dataSource);
+
+    viewer.rootContext()->setContextProperty("dataSource", &dataSource); // Exposes the dataSource instance to QML, allowing QML components to interact with it
 
     viewer.setSource(QUrl("qrc:/qml/qmloscilloscope/main.qml"));
-    viewer.setResizeMode(QQuickView::SizeRootObjectToView);
+    viewer.setResizeMode(QQuickView::SizeRootObjectToView); //Adjusts the resizing behavior of the root QML object to match the view
     viewer.setColor(QColor("#404040"));
     viewer.show();
 
