@@ -65,8 +65,6 @@ ChartView {
         running: true
         repeat: true
         onTriggered: { //The handler that is called every time the timer interval elapses.
-//            dataSource.updateSeries(ecgChartView.series(0));
-//            dataSource.updateSeries(ecgChartView.series(1));
             dataSource.updateECGSeries(lineSeries)
         }
     }

@@ -1,6 +1,4 @@
 #include "bluetooth.h"
-#include <QDebug>
-#include <QByteArray>
 
 BluetoothServer::BluetoothServer() {
     // Create a RFCOMM Bluetooth server
@@ -27,7 +25,7 @@ void BluetoothServer::clientConnected() {
 
 void BluetoothServer::readSocket() {
 
-#ifdef RANDOMDATAGEN
+#ifdef RANDOMDATAGEN    // if no bluetooth devices by hand, use this random number generator
     int v = 0;
     while (1) {
         int randomNumber = QRandomGenerator::global()->bounded(95, 151);

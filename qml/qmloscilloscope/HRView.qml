@@ -9,19 +9,18 @@ ChartView {
 
     ValueAxis {
         id: axisY
-        min: 0
-        max: 200
+        tickCount: 5
+        titleText: "BPM"
     }
 
 
-    ValueAxis {
+    DateTimeAxis {
         id: axisX
-        min: 0
-        max: 60
+        tickCount: 2
     }
 
     LineSeries {
-        id: lineSeries1
+        id: lineSeries
         name: "Heart Rate"
         axisX: axisX
         axisY: axisY
@@ -29,15 +28,13 @@ ChartView {
     }
 
 
-//    Timer {
-//        id: refreshTimer
-//        interval: 1 / 60 * 1000 // 60 Hz
-//        running: true
-//        repeat: true
-//        onTriggered: {
-//            dataSource.update(hrView.series(0));
-//            dataSource.update(hrView.series(1));
-//            updateXAxisRange(); // 更新X轴的范围
-//        }
-//    }
+    Timer {
+        id: refreshTimer
+        interval: 1000 // 1 Hz
+        running: true
+        repeat: true
+        onTriggered: {
+            dataSource.updateHRSeries(lineSeries);
+        }
+    }
 }

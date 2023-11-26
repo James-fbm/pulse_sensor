@@ -30,6 +30,7 @@
 #ifndef DATASOURCE_H
 #define DATASOURCE_H
 #define DISPLAYBUFSIZE 256
+#define THRESHOLD 140
 #include <QtCore/QObject>
 #include <QtCharts/QAbstractSeries>
 #include <QtCharts/QValueAxis>
@@ -56,11 +57,15 @@ Q_SIGNALS:
 public slots:
     void updateHeartRate(qint32 heartRate);
     void updateECGSeries(QLineSeries *series);
+    void updateHRSeries(QLineSeries *series);
 
 private:
-    QQuickView *appViewer; //A pointer to the QQuickView instance, used to interact with the QML view
+    QQuickView *appViewer; // A pointer to the QQuickView instance, used to interact with the QML view
     QList<QPointF> points;
-    qint64 minX, maxX, minY, maxY;
+    QList<QPointF> beats;
+    qint64 minX_ECG, maxX_ECG, minY_ECG, maxY_ECG;
+    qint64 minX_HR, maxX_HR, minY_HR, maxY_HR;
+    QList<qint64> beatsWindow;    // store the latest beats timestamps to update BPM
 };
 
 #endif // DATASOURCE_H

@@ -38,17 +38,20 @@ Q_DECLARE_METATYPE(QAbstractAxis *)
 DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
     QObject(parent),
     appViewer(_appViewer),
-    minY(std::numeric_limits<qint64>::max()),        // reverse initialize in order to guarantee update
-    maxY(std::numeric_limits<qint64>::min())
+    minY_ECG(std::numeric_limits<qint64>::max()),        // reverse initialize in order to guarantee update
+    maxY_ECG(std::numeric_limits<qint64>::min()),
+    minY_HR(std::numeric_limits<qint64>::max()),
+    maxY_HR(std::numeric_limits<qint64>::min())
 {
 
     qRegisterMetaType<QAbstractSeries*>();
     qRegisterMetaType<QAbstractAxis*>();
 
     qint64 ms = QDateTime::currentMSecsSinceEpoch();
-    minX = ms, maxX = ms;
+    minX_ECG = ms, maxX_ECG = ms;
+    minX_HR = ms, maxX_HR = ms;
 
-    // initialize all the X-axis index with a valid timestamp
+    // initialize all the X-axis index with a valid timestamp and a valid sensor value
     for (qint32 i = 0; i < DISPLAYBUFSIZE; ++i) {
         points.append(QPointF(ms, 100));
     }
@@ -66,11 +69,29 @@ void DataSource::updateECGSeries(QLineSeries *series)
         // mins and maxs are updated in updateHeartRate
         auto valueAxisX = static_cast<QDateTimeAxis *>(axis[0]);
         valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
-        valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX),
-                             QDateTime::fromMSecsSinceEpoch(maxX));
+        valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX_ECG),
+                             QDateTime::fromMSecsSinceEpoch(maxX_ECG));
 
         auto valueAxisY = static_cast<QValueAxis*>(axis[1]);
-        valueAxisY->setRange(minY, maxY);
+        valueAxisY->setRange(minY_ECG, maxY_ECG);
+    }
+}
+
+void DataSource::updateHRSeries(QLineSeries *series) {
+    if (series) {
+        series->replace(beats);        // update series points
+
+        // Update axes
+        auto axis = series->attachedAxes();
+
+        // mins and maxs are updated in updateHeartRate
+        auto valueAxisX = static_cast<QDateTimeAxis *>(axis[0]);
+        valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
+        valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX_HR),
+                             QDateTime::fromMSecsSinceEpoch(maxX_HR));
+
+        auto valueAxisY = static_cast<QValueAxis*>(axis[1]);
+        valueAxisY->setRange(minY_HR, maxY_HR);
     }
 }
 
@@ -78,35 +99,78 @@ void DataSource::updateHeartRate(qint32 heartRate)
 {
     // there always will be DISPLAYBUFSIZE elements
 
-    auto oldestPoint = points.front();
-    qint64 dropY = oldestPoint.y();
+    qint64 dropY_ECG = points.front().y();
+    // There will always be DISPLAYBUFSIZE elements in the list
     points.pop_front();
-    if (dropY <= minY || dropY >= maxY) {
+    if (dropY_ECG <= minY_ECG || dropY_ECG >= maxY_ECG) {
         // if dropY reaches boundaries, recalculate minY and maxY
-        minY = std::numeric_limits<qint64>::max();
-        maxY = std::numeric_limits<qint64>::min();
+        minY_ECG = std::numeric_limits<qint64>::max();
+        maxY_ECG = std::numeric_limits<qint64>::min();
         for (auto& p: points) {
-            if (minY >= p.y()) {
-                minY = p.y();
+            if (minY_ECG >= p.y()) {
+                minY_ECG = p.y();
             }
-            if (maxY <= p.y()) {
-                maxY = p.y();
+            if (maxY_ECG <= p.y()) {
+                maxY_ECG = p.y();
             }
         }
     }
-
 
     // fetch current time as X-axis index
     qint64 ms = QDateTime::currentMSecsSinceEpoch();
     points.append(QPointF(ms, heartRate));
 
-    minX = points.front().x();
-    maxX = points.back().x();
-    qDebug() << minX << ' ' << ms;
+    minX_ECG = points.front().x();
+    maxX_ECG = points.back().x();
 
-    qint64 newY = heartRate;
-    minY = newY < minY ? newY : minY;
-    maxY = newY > maxY ? newY : maxY;
+    qint64 newY_ECG = heartRate;
+    minY_ECG = newY_ECG < minY_ECG ? newY_ECG : minY_ECG;
+    maxY_ECG = newY_ECG > maxY_ECG ? newY_ECG : maxY_ECG;
 
+    // calculate new BPM
+    if (heartRate > THRESHOLD) {
+        if (beatsWindow.isEmpty() || ms - beatsWindow.back() > 250) {
+            beatsWindow.push_back(ms);
+
+            // window size should be no more than 8
+            if (beatsWindow.size() > 8) {
+                beatsWindow.pop_front();
+            }
+
+            // calculating BPM requires at least 2 beat timestamps
+            if (beatsWindow.size() > 1) {
+                qint64 last_beat = beatsWindow.front();
+                qint64 first_beat = beatsWindow.back();
+
+                qint64 BPM = 60000 / (first_beat - last_beat) * (beatsWindow.size() - 1);
+
+                if (beats.size() > 60) {
+                    auto dropY_HR = beats.front().y();
+                    beats.pop_front();
+
+                    // same as ECG
+                    if (dropY_HR <= minY_HR || dropY_HR >= maxY_HR) {
+                        minY_HR = std::numeric_limits<qint64>::max();
+                        maxY_HR = std::numeric_limits<qint64>::min();
+                        for (auto& b: beats) {
+                            if (minY_HR >= b.y()) {
+                                minY_HR = b.y();
+                            }
+                            if (maxY_HR <= b.y()) {
+                                maxY_HR = b.y();
+                            }
+                        }
+                    }
+                }
+                beats.append(QPointF(ms, BPM));
+
+                minX_HR = beats.front().x();
+                maxX_HR = beats.back().x();
+                minY_HR = BPM <= minY_HR ? BPM : minY_HR;
+                maxY_HR = BPM >= maxY_HR ? BPM : maxY_HR;
+
+            }
+        }
+    }
 }
 
