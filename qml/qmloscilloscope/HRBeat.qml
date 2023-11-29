@@ -45,13 +45,16 @@ Item {
             // avoid divided by 0 when bpm is 0
             systole.duration = 1000 * 60 / bpm / 3
             diastole.duration = 1000 * 60 * 2 / bpm / 3
-            if (heartBeatAnimation.stopped())
-                heartBeatAnimation.start()
+            console.log(systole.duration, diastole.duration)
+            // refresh duration property immediately
+            heartBeatAnimation.restart()
+//            if (heartBeatAnimation.stopped())
+//                heartBeatAnimation.start()
 
-            // component have just initialized and bpm updated for the first time
-            if (!heartBeatAnimation.stopped() && !heartBeatAnimation.started()) {
-                heartBeatAnimation.start()
-            }
+//            // component have just initialized and bpm updated for the first time
+//            if (!heartBeatAnimation.stopped() && !heartBeatAnimation.started()) {
+//                heartBeatAnimation.start()
+//            }
         }
         bpmText.text = String(bpm) + " BPM"
     }
