@@ -30,6 +30,13 @@ Item {
                     property: "scale"
                     to: 1.0
                 }
+
+                ScriptAction {
+                    script: {
+                        // refresh duration property
+                        heartBeatAnimation.restart()
+                    }
+                }
             }
         }
         Text {
@@ -38,28 +45,21 @@ Item {
         }
     }
 
-    function resetAnimation() {
-        if (bpm === 0)
+    onBpmChanged: {
+        if (bpm === 0) {
+            // avoid being devided by 0
             heartBeatAnimation.stop()
-        else {
-            // avoid divided by 0 when bpm is 0
+        } else {
             systole.duration = 1000 * 60 / bpm / 3
             diastole.duration = 1000 * 60 * 2 / bpm / 3
-            console.log(systole.duration, diastole.duration)
-            // refresh duration property immediately
-            heartBeatAnimation.restart()
-//            if (heartBeatAnimation.stopped())
-//                heartBeatAnimation.start()
-
-//            // component have just initialized and bpm updated for the first time
-//            if (!heartBeatAnimation.stopped() && !heartBeatAnimation.started()) {
-//                heartBeatAnimation.start()
-//            }
+            if (heartBeatAnimation.stopped()) {
+                heartBeatAnimation.start()
+            }
+            // component have just initialized and bpm updated for the first time
+            if (!heartBeatAnimation.stopped() && !heartBeatAnimation.started()) {
+                heartBeatAnimation.start()
+            }
         }
         bpmText.text = String(bpm) + " BPM"
-    }
-
-    onBpmChanged: {
-        resetAnimation()
     }
 }
