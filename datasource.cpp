@@ -42,7 +42,8 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
     maxY_ECG(std::numeric_limits<qint64>::min()),
     minY_HR(std::numeric_limits<qint64>::max()),
     maxY_HR(std::numeric_limits<qint64>::min()),
-    influx(8)
+    influx(8),
+    BPM(0)
 {
 
     qRegisterMetaType<QAbstractSeries*>();
@@ -188,4 +189,8 @@ void DataSource::writeHRToDatabase() {
     r.setTimestamp(ms);
 
     influx.addData(r);
+}
+
+qint64 DataSource::getBPM() {
+    return BPM;
 }

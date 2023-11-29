@@ -29,7 +29,7 @@ void BluetoothServer::readSocket() {
     int v = 0;
     while (1) {
         int randomNumber = QRandomGenerator::global()->bounded(80, 170);
-        for (int i = 0 ; i < 2000000 ; ++i);
+        for (int i = 0 ; i < 20000000 ; ++i);
         qint64 ms = QDateTime::currentMSecsSinceEpoch();
         emit heartRateReceived(randomNumber, ms);
         ++v;

@@ -69,20 +69,6 @@ void InfluxDB::sendData(QString& data) {
                      [this, reply](){
         this->handleReply(reply);
     });
-//    QEventLoop loop;
-
-//    loop.exec();
-
-//    qDebug() << "Sent data: " << this->buffer;
-
-//    if (reply->error() == QNetworkReply::NoError) {
-//        qDebug() << "Success:" << reply->readAll();
-//    } else {
-//        qDebug() << "Error:" << reply->errorString();
-//    }
-
-//    qDebug() << "Sent data length:" << this->buffer.size() << "bytes";
-//    reply->deleteLater();
 }
 
 void InfluxDB::handleReply(QNetworkReply* reply) {

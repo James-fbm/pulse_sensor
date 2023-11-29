@@ -64,6 +64,7 @@ public slots:
     void updateECGSeries(QLineSeries *series);
     void updateHRSeries(QLineSeries *series);
     void writeHRToDatabase();
+    qint64 getBPM();
 private:
     QQuickView *appViewer; // A pointer to the QQuickView instance, used to interact with the QML view
     QList<QPointF> points;

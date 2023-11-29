@@ -5,5 +5,7 @@
         <file>qml/qmloscilloscope/ECGView.qml</file>
         <file>qml/qmloscilloscope/DisplayButton.qml</file>
         <file>qml/qmloscilloscope/HRView.qml</file>
+        <file>image/heart.png</file>
+        <file>qml/qmloscilloscope/HRBeat.qml</file>
     </qresource>
 </RCC>
