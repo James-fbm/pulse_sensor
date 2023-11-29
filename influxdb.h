@@ -18,6 +18,7 @@
 #include <QDebug>
 #include <QThread>
 #include <type_traits>
+#include <QObject>
 
 // map to json configuration file
 struct DBConfig {
@@ -51,8 +52,8 @@ public:
     const QString& getField();
     const QString& getTimestampString();
     quint64 getTimestamp();
-    void setMeasurement(QString& measureme);
-    void setMeasurement(QString&& measureme);
+    void setMeasurement(QString& measurement);
+    void setMeasurement(QString&& measurement);
     void setTag(QString& tag);
     void setTag(QString&& tag);
     void setField(QString& field);
@@ -62,7 +63,11 @@ public:
     void setTimestamp(quint64 timestamp);
 };
 
-class InfluxDB {
+class InfluxDB: public QObject {
+    Q_OBJECT
+public:
+    InfluxDB(quint32 size = 512);
+    ~InfluxDB();
 private:
     DBConfig config;
 
@@ -76,11 +81,11 @@ private:
     void getConfig();
     void makeRequest();
     void sendData(QString& data);
+private slots:
+    void handleReply(QNetworkReply* reply);
 
 public:
-    InfluxDB(quint32 size = 512);
-    ~InfluxDB();
-    void addData(DBRecord& record);
+    void addData(DBRecord record);
     const QString& getBuffer();
 };
 

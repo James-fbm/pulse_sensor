@@ -28,9 +28,10 @@ void BluetoothServer::readSocket() {
 #ifdef RANDOMDATAGEN    // if no bluetooth devices by hand, use this random number generator
     int v = 0;
     while (1) {
-        int randomNumber = QRandomGenerator::global()->bounded(95, 151);
+        int randomNumber = QRandomGenerator::global()->bounded(80, 170);
         for (int i = 0 ; i < 2000000 ; ++i);
-        emit heartRateReceived(randomNumber);
+        qint64 ms = QDateTime::currentMSecsSinceEpoch();
+        emit heartRateReceived(randomNumber, ms);
         ++v;
     }
 #else
@@ -42,8 +43,9 @@ void BluetoothServer::readSocket() {
     if (data.size() == 1) {
         // Unpack the received byte into an integer
         int value = static_cast<unsigned char>(data[0]);
-        qDebug() << "Received value:" << value;
-        emit heartRateReceived(value);
+        // qDebug() << "Received value:" << value;
+        qint64 ms = QDateTime::currentMSecsSinceEpoch();
+        emit heartRateReceived(randomNumber, ms);
     }
 #endif
 }

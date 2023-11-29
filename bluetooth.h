@@ -1,7 +1,7 @@
 #ifndef BLUETOOTH_H
 #define BLUETOOTH_H
 
-// #define RANDOMDATAGEN 1
+#define RANDOMDATAGEN 1
 
 #include <QObject>
 #include <QBluetoothServer>
@@ -9,6 +9,7 @@
 #include <QRandomGenerator>
 #include <QDebug>
 #include <QByteArray>
+#include <QDateTime>
 
 class BluetoothServer : public QObject {
     Q_OBJECT
@@ -22,7 +23,7 @@ public slots:
     void readSocket();
 
 signals:
-    void heartRateReceived(qint32 rate);
+    void heartRateReceived(qint32 rate, qint64 ms);
 
 private:
     QBluetoothServer *server;

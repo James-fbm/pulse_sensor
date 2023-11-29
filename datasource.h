@@ -29,8 +29,11 @@
 
 #ifndef DATASOURCE_H
 #define DATASOURCE_H
-#define DISPLAYBUFSIZE 256
-#define THRESHOLD 140
+#define ECGBUFFERSIZE 256
+#define HRBUFFERSIZE 60
+#define BEATTHRESHOLD 155
+#define UPPERTHRESHOLD 160
+#define LOWTHRESHOLD 100
 #include <QtCore/QObject>
 #include <QtCharts/QAbstractSeries>
 #include <QtCharts/QValueAxis>
@@ -38,6 +41,8 @@
 #include <QDateTimeAxis>
 #include <QLineSeries>
 #include <QDebug>
+#include <QTimer>
+#include "influxdb.h"
 
 QT_BEGIN_NAMESPACE
 class QQuickView;
@@ -55,10 +60,10 @@ public:
 Q_SIGNALS:
 
 public slots:
-    void updateHeartRate(qint32 heartRate);
+    void updateHeartRate(qint32 heartRate, qint64 ms);
     void updateECGSeries(QLineSeries *series);
     void updateHRSeries(QLineSeries *series);
-
+    void writeHRToDatabase();
 private:
     QQuickView *appViewer; // A pointer to the QQuickView instance, used to interact with the QML view
     QList<QPointF> points;
@@ -66,6 +71,9 @@ private:
     qint64 minX_ECG, maxX_ECG, minY_ECG, maxY_ECG;
     qint64 minX_HR, maxX_HR, minY_HR, maxY_HR;
     QList<qint64> beatsWindow;    // store the latest beats timestamps to update BPM
+    InfluxDB influx;
+    qint64 BPM;
+    QTimer timer;
 };
 
 #endif // DATASOURCE_H

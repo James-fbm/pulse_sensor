@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
 
 
 
-#include "influxdb.h"
 #include "bluetooth.h"
 #include <QApplication>
 #include "datasource.h"
@@ -79,10 +78,11 @@ int main(int argc, char *argv[])
     viewer.show();
 
     QObject::connect(&server, &BluetoothServer::heartRateReceived,
-                     &dataSource, &DataSource::updateHeartRate, Qt::DirectConnection);
+                     &dataSource, &DataSource::updateHeartRate/*, Qt::DirectConnection*/);
 
     MyThread thread(server);
     thread.start();
     return a.exec();
+
 }
 

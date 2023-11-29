@@ -41,7 +41,8 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
     minY_ECG(std::numeric_limits<qint64>::max()),        // reverse initialize in order to guarantee update
     maxY_ECG(std::numeric_limits<qint64>::min()),
     minY_HR(std::numeric_limits<qint64>::max()),
-    maxY_HR(std::numeric_limits<qint64>::min())
+    maxY_HR(std::numeric_limits<qint64>::min()),
+    influx(8)
 {
 
     qRegisterMetaType<QAbstractSeries*>();
@@ -51,10 +52,9 @@ DataSource::DataSource(QQuickView *_appViewer, QObject *parent) :
     minX_ECG = ms, maxX_ECG = ms;
     minX_HR = ms, maxX_HR = ms;
 
-    // initialize all the X-axis index with a valid timestamp and a valid sensor value
-    for (qint32 i = 0; i < DISPLAYBUFSIZE; ++i) {
-        points.append(QPointF(ms, 100));
-    }
+    // write heart rate to database every 1000ms
+    connect(&timer, &QTimer::timeout, this, &DataSource::writeHRToDatabase);
+    timer.start(1000);
 }
 
 
@@ -95,29 +95,35 @@ void DataSource::updateHRSeries(QLineSeries *series) {
     }
 }
 
-void DataSource::updateHeartRate(qint32 heartRate)
+void DataSource::updateHeartRate(qint32 heartRate, qint64 ms)
 {
-    // there always will be DISPLAYBUFSIZE elements
+    // suppress large fluctuations
+    if (heartRate > UPPERTHRESHOLD)
+        heartRate = UPPERTHRESHOLD;
+    if (heartRate < LOWTHRESHOLD)
+        heartRate = LOWTHRESHOLD;
 
-    qint64 dropY_ECG = points.front().y();
-    // There will always be DISPLAYBUFSIZE elements in the list
-    points.pop_front();
-    if (dropY_ECG <= minY_ECG || dropY_ECG >= maxY_ECG) {
-        // if dropY reaches boundaries, recalculate minY and maxY
-        minY_ECG = std::numeric_limits<qint64>::max();
-        maxY_ECG = std::numeric_limits<qint64>::min();
-        for (auto& p: points) {
-            if (minY_ECG >= p.y()) {
-                minY_ECG = p.y();
-            }
-            if (maxY_ECG <= p.y()) {
-                maxY_ECG = p.y();
+    // if the buffer is full, drop the oldest element and reset minY and maxY
+    if (points.size() >= ECGBUFFERSIZE) {
+        qint64 dropY_ECG = points.front().y();
+        points.pop_front();
+        if (dropY_ECG <= minY_ECG || dropY_ECG >= maxY_ECG) {
+            // if dropY reaches boundaries, recalculate minY and maxY
+            minY_ECG = std::numeric_limits<qint64>::max();
+            maxY_ECG = std::numeric_limits<qint64>::min();
+            for (auto& p: points) {
+                if (minY_ECG >= p.y()) {
+                    minY_ECG = p.y();
+                }
+                if (maxY_ECG <= p.y()) {
+                    maxY_ECG = p.y();
+                }
             }
         }
     }
 
     // fetch current time as X-axis index
-    qint64 ms = QDateTime::currentMSecsSinceEpoch();
+    // qint64 ms = QDateTime::currentMSecsSinceEpoch();
     points.append(QPointF(ms, heartRate));
 
     minX_ECG = points.front().x();
@@ -128,7 +134,7 @@ void DataSource::updateHeartRate(qint32 heartRate)
     maxY_ECG = newY_ECG > maxY_ECG ? newY_ECG : maxY_ECG;
 
     // calculate new BPM
-    if (heartRate > THRESHOLD) {
+    if (heartRate > BEATTHRESHOLD) {
         if (beatsWindow.isEmpty() || ms - beatsWindow.back() > 250) {
             beatsWindow.push_back(ms);
 
@@ -142,9 +148,9 @@ void DataSource::updateHeartRate(qint32 heartRate)
                 qint64 last_beat = beatsWindow.front();
                 qint64 first_beat = beatsWindow.back();
 
-                qint64 BPM = 60000 / (first_beat - last_beat) * (beatsWindow.size() - 1);
+                BPM = 60000 / (first_beat - last_beat) * (beatsWindow.size() - 1);
 
-                if (beats.size() > 60) {
+                if (beats.size() > HRBUFFERSIZE) {
                     auto dropY_HR = beats.front().y();
                     beats.pop_front();
 
@@ -168,9 +174,19 @@ void DataSource::updateHeartRate(qint32 heartRate)
                 maxX_HR = beats.back().x();
                 minY_HR = BPM <= minY_HR ? BPM : minY_HR;
                 maxY_HR = BPM >= maxY_HR ? BPM : maxY_HR;
-
             }
         }
     }
+
 }
 
+void DataSource::writeHRToDatabase() {
+    DBRecord r;
+    qint64 ms = QDateTime::currentMSecsSinceEpoch();
+    r.setMeasurement("hr");
+    // r.addTagPair({"name", "pl"});
+    r.addFieldPair<qint64>({"value", BPM});
+    r.setTimestamp(ms);
+
+    influx.addData(r);
+}

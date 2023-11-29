@@ -61,26 +61,40 @@ void InfluxDB::sendData(QString& data) {
     // See the request data format at https://docs.influxdata.com/influxdb/v2/write-data/developer-tools/api/
     // The `data` variable represents the --data-binary part of the curl command.
     // Use QString for flexibility
+    qDebug() << "Prepare sending data length: " << data.size() << "bytes";
+    qDebug() << data;
     QByteArray bdata = data.toUtf8();
-    QNetworkReply *reply = this->manager.post(this->request, bdata);
+    QNetworkReply* reply = this->manager.post(this->request, bdata);
+    QObject::connect(reply, &QNetworkReply::finished, this,
+                     [this, reply](){
+        this->handleReply(reply);
+    });
+//    QEventLoop loop;
 
-    QEventLoop loop;
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
+//    loop.exec();
 
-    qDebug() << "Sent data: " << this->buffer;
+//    qDebug() << "Sent data: " << this->buffer;
 
+//    if (reply->error() == QNetworkReply::NoError) {
+//        qDebug() << "Success:" << reply->readAll();
+//    } else {
+//        qDebug() << "Error:" << reply->errorString();
+//    }
+
+//    qDebug() << "Sent data length:" << this->buffer.size() << "bytes";
+//    reply->deleteLater();
+}
+
+void InfluxDB::handleReply(QNetworkReply* reply) {
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "Success:" << reply->readAll();
     } else {
         qDebug() << "Error:" << reply->errorString();
     }
-
-    qDebug() << "Sent data length:" << this->buffer.size() << "bytes";
     reply->deleteLater();
 }
 
-void InfluxDB::addData(DBRecord& record) {
+void InfluxDB::addData(DBRecord record) {
     this->buffer += record.getMeasurement();
     if (record.getTag().size() != 0) {
         this->buffer += ',';
@@ -92,6 +106,7 @@ void InfluxDB::addData(DBRecord& record) {
         this->buffer +=  ' ';
     }
     this->buffer += record.getTimestampString();
+    this->buffer += '\n';
     ++this->count;
 
     if (this->count >= this->buf_size) {
