@@ -51,7 +51,7 @@ protected:
     }
 
 private:
-    BluetoothServer& server;  // 假设ServerType是包含readSocket方法的类
+    BluetoothServer& server;
 };
 
 

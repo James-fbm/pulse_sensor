@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtCharts 2.1
+import QtQuick.Controls 1.0
 
 
 ChartView {
@@ -27,6 +28,18 @@ ChartView {
         useOpenGL: true
     }
 
+    Rectangle {
+        width: parent.width / 6
+        height: parent.height / 4
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 10
+        anchors.rightMargin: 10
+        Text {
+            anchors.fill: parent
+            text: "heart rate"
+        }
+    }
 
     Timer {
         id: refreshTimer

@@ -177,13 +177,12 @@ void DataSource::updateHeartRate(qint32 heartRate, qint64 ms)
             }
         }
     }
-
 }
 
 void DataSource::writeHRToDatabase() {
     DBRecord r;
     qint64 ms = QDateTime::currentMSecsSinceEpoch();
-    r.setMeasurement("hr");
+    r.setMeasurement("hrrrr");
     // r.addTagPair({"name", "pl"});
     r.addFieldPair<qint64>({"value", BPM});
     r.setTimestamp(ms);
