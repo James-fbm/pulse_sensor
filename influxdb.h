@@ -72,7 +72,8 @@ private:
     DBConfig config;
 
     QNetworkAccessManager manager;
-    QNetworkRequest request;
+    QNetworkRequest read_request;
+    QNetworkRequest write_request;
 
     QString buffer;
     quint32 buf_size;
@@ -82,11 +83,12 @@ private:
     void makeRequest();
     void sendData(QString& data);
 private slots:
-    void handleReply(QNetworkReply* reply);
+    void handleWriteReply(QNetworkReply* reply);
 
 public:
     void addData(DBRecord record);
     const QString& getBuffer();
+    void queryData();
 };
 
 template<typename T>

@@ -59,28 +59,30 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    BluetoothServer server;
+//    BluetoothServer server;
 
-    QQuickView viewer; //Creates a QQuickView, which is a window that can display a Qt Quick interface (defined in QML)
+//    QQuickView viewer; //Creates a QQuickView, which is a window that can display a Qt Quick interface (defined in QML)
 
-    QObject::connect(viewer.engine(), &QQmlEngine::quit, &viewer, &QWindow::close); //Connects the quit signal from the QML engine to close the QQuickView window
+//    QObject::connect(viewer.engine(), &QQmlEngine::quit, &viewer, &QWindow::close); //Connects the quit signal from the QML engine to close the QQuickView window
 
-    viewer.setTitle(QStringLiteral("ECG Monitor"));
+//    viewer.setTitle(QStringLiteral("ECG Monitor"));
 
-    DataSource dataSource(&viewer);
+//    DataSource dataSource(&viewer);
 
-    viewer.rootContext()->setContextProperty("dataSource", &dataSource); // Exposes the dataSource instance to QML, allowing QML components to interact with it
+//    viewer.rootContext()->setContextProperty("dataSource", &dataSource); // Exposes the dataSource instance to QML, allowing QML components to interact with it
 
-    viewer.setSource(QUrl("qrc:/qml/qmloscilloscope/main.qml"));
-    viewer.setResizeMode(QQuickView::SizeRootObjectToView); //Adjusts the resizing behavior of the root QML object to match the view
-    viewer.setColor(QColor("#404040"));
-    viewer.show();
+//    viewer.setSource(QUrl("qrc:/qml/qmloscilloscope/main.qml"));
+//    viewer.setResizeMode(QQuickView::SizeRootObjectToView); //Adjusts the resizing behavior of the root QML object to match the view
+//    viewer.setColor(QColor("#404040"));
+//    viewer.show();
 
-    QObject::connect(&server, &BluetoothServer::heartRateReceived,
-                     &dataSource, &DataSource::updateHeartRate/*, Qt::DirectConnection*/);
+//    QObject::connect(&server, &BluetoothServer::heartRateReceived,
+//                     &dataSource, &DataSource::updateHeartRate/*, Qt::DirectConnection*/);
 
-    MyThread thread(server);
-    thread.start();
+//    MyThread thread(server);
+//    thread.start();
+    InfluxDB influx;
+    influx.queryData();
     return a.exec();
 
 }

@@ -38,22 +38,30 @@ void InfluxDB::makeRequest() {
     // Intialize an Http request for writing database
     // Use request url and header with configuration attributes stored by getConfig()
     QUrl url(this->config.url);
-    QUrl endpoint("/api/v2/write");
-    url = url.resolved(endpoint);
+    QUrl read_endpoint("/api/v2/query");
+    QUrl write_endpoint("/api/v2/write");
+    QUrl read_url = url.resolved(read_endpoint);
+    QUrl write_url = url.resolved(write_endpoint);
 
-    QUrlQuery query;
-    query.addQueryItem("org", this->config.org);
-    query.addQueryItem("bucket", this->config.bucket);
-    query.addQueryItem("precision", this->config.precision);
+    QUrlQuery read_query, write_query;
+    read_query.addQueryItem("org", this->config.org);
+    write_query.addQueryItem("org", this->config.org);
+    write_query.addQueryItem("bucket", this->config.bucket);
+    write_query.addQueryItem("precision", this->config.precision);
 
-    url.setQuery(query);
+    read_url.setQuery(read_query);
+    write_url.setQuery(write_query);
 
-    this->request.setUrl(url);
+    this->read_request.setUrl(read_url);
+    this->write_request.setUrl(write_url);
 
-    this->request.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain");
+    this->read_request.setHeader(QNetworkRequest::ContentTypeHeader, "application/vnd.flux");
+    this->write_request.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain");
 
     QString token = QString("Token ") + this->config.token;
-    this->request.setRawHeader("Authorization", token.toUtf8());
+    this->read_request.setRawHeader("Authorization", token.toUtf8());
+    this->read_request.setRawHeader("Accept", "application/csv");
+    this->write_request.setRawHeader("Authorization", token.toUtf8());
 
 }
 
@@ -61,23 +69,48 @@ void InfluxDB::sendData(QString& data) {
     // See the request data format at https://docs.influxdata.com/influxdb/v2/write-data/developer-tools/api/
     // The `data` variable represents the --data-binary part of the curl command.
     // Use QString for flexibility
-//    qDebug() << "Prepare sending data length: " << data.size() << "bytes";
+    qDebug() << "Prepare sending data length: " << data.size() << "bytes";
 //    qDebug() << data;
     QByteArray bdata = data.toUtf8();
-    QNetworkReply* reply = this->manager.post(this->request, bdata);
+    QNetworkReply* reply = this->manager.post(this->write_request, bdata);
     QObject::connect(reply, &QNetworkReply::finished, this,
                      [this, reply](){
-        this->handleReply(reply);
+        this->handleWriteReply(reply);
     });
 }
 
-void InfluxDB::handleReply(QNetworkReply* reply) {
+void InfluxDB::handleWriteReply(QNetworkReply* reply) {
     if (reply->error() == QNetworkReply::NoError) {
         qDebug() << "Success:" << reply->readAll();
     } else {
         qDebug() << "Error:" << reply->errorString();
     }
     reply->deleteLater();
+}
+
+void InfluxDB::queryData() {
+    QString query_flux = "from(bucket:\"db_pulse_sensor\") |> range(start: -20d) "
+        "|> filter(fn: (r) => r._measurement == \"hrr\")";
+
+    QNetworkReply* reply = this->manager.post(this->read_request, query_flux.toUtf8());
+
+    QNetworkRequest sentRequest = reply->request();
+
+    QList<QByteArray> headerList = sentRequest.rawHeaderList();
+    for (const QByteArray &header : headerList) {
+        qDebug() << header << ": " << sentRequest.rawHeader(header);
+    }
+    qDebug() << sentRequest.url();
+
+    QEventLoop eventLoop;
+    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    eventLoop.exec();
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << "Success:" << reply->readAll();
+
+    } else {
+        qDebug() << "Error:" << reply->errorString();
+    }
 }
 
 void InfluxDB::addData(DBRecord record) {
