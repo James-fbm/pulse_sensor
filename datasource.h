@@ -29,11 +29,11 @@
 
 #ifndef DATASOURCE_H
 #define DATASOURCE_H
-#define ECGBUFFERSIZE 256
+#define ECGBUFFERSIZE 128
 #define HRBUFFERSIZE 60
-#define BEATTHRESHOLD 155
+#define BEATTHRESHOLD 138
 #define UPPERTHRESHOLD 160
-#define LOWTHRESHOLD 100
+#define LOWTHRESHOLD 90
 #include <QtCore/QObject>
 #include <QtCharts/QAbstractSeries>
 #include <QtCharts/QValueAxis>

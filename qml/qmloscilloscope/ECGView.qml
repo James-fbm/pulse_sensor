@@ -38,9 +38,11 @@ ChartView {
 
     ValueAxis {
         id: axisY
-        labelsVisible: false
-        gridVisible: false
+//        labelsVisible: false
+//        gridVisible: false
         tickCount: 2
+        min: 0
+        max: 1
     }
 
 
@@ -48,6 +50,7 @@ ChartView {
         id: axisX
         gridVisible: false
         tickCount: 2
+        format: "MM-dd-yyyy hh:mm:ss:zzz"
     }
 
     LineSeries {

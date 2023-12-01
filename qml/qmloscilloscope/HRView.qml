@@ -30,6 +30,7 @@ ChartView {
     DateTimeAxis {
         id: axisX
         tickCount: 2
+        format: "MM-dd-yyyy hh:mm:ss:zzz"
     }
 
     LineSeries {

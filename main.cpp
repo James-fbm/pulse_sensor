@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
 #include <QtCore/QDir>
 
 
-
 #include <QThread>
 
 class MyThread : public QThread {

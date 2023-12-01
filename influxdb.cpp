@@ -61,8 +61,8 @@ void InfluxDB::sendData(QString& data) {
     // See the request data format at https://docs.influxdata.com/influxdb/v2/write-data/developer-tools/api/
     // The `data` variable represents the --data-binary part of the curl command.
     // Use QString for flexibility
-    qDebug() << "Prepare sending data length: " << data.size() << "bytes";
-    qDebug() << data;
+//    qDebug() << "Prepare sending data length: " << data.size() << "bytes";
+//    qDebug() << data;
     QByteArray bdata = data.toUtf8();
     QNetworkReply* reply = this->manager.post(this->request, bdata);
     QObject::connect(reply, &QNetworkReply::finished, this,

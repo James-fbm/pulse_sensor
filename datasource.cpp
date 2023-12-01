@@ -69,7 +69,7 @@ void DataSource::updateECGSeries(QLineSeries *series)
 
         // mins and maxs are updated in updateHeartRate
         auto valueAxisX = static_cast<QDateTimeAxis *>(axis[0]);
-        valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
+        // valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
         valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX_ECG),
                              QDateTime::fromMSecsSinceEpoch(maxX_ECG));
 
@@ -87,7 +87,7 @@ void DataSource::updateHRSeries(QLineSeries *series) {
 
         // mins and maxs are updated in updateHeartRate
         auto valueAxisX = static_cast<QDateTimeAxis *>(axis[0]);
-        valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
+        // valueAxisX->setFormat("yyyy-MM-dd hh:mm:ss:zzz");
         valueAxisX->setRange(QDateTime::fromMSecsSinceEpoch(minX_HR),
                              QDateTime::fromMSecsSinceEpoch(maxX_HR));
 
@@ -99,10 +99,9 @@ void DataSource::updateHRSeries(QLineSeries *series) {
 void DataSource::updateHeartRate(qint32 heartRate, qint64 ms)
 {
     // suppress large fluctuations
-    if (heartRate > UPPERTHRESHOLD)
-        heartRate = UPPERTHRESHOLD;
-    if (heartRate < LOWTHRESHOLD)
-        heartRate = LOWTHRESHOLD;
+    if (heartRate > UPPERTHRESHOLD || heartRate < LOWTHRESHOLD) {
+        return;
+    }
 
     // if the buffer is full, drop the oldest element and reset minY and maxY
     if (points.size() >= ECGBUFFERSIZE) {
@@ -134,8 +133,10 @@ void DataSource::updateHeartRate(qint32 heartRate, qint64 ms)
     minY_ECG = newY_ECG < minY_ECG ? newY_ECG : minY_ECG;
     maxY_ECG = newY_ECG > maxY_ECG ? newY_ECG : maxY_ECG;
 
+    qint64 beat_threshold = maxY_ECG - ((maxY_ECG - minY_ECG) / 4);
+
     // calculate new BPM
-    if (heartRate > BEATTHRESHOLD) {
+    if (heartRate > beat_threshold) {
         if (beatsWindow.isEmpty() || ms - beatsWindow.back() > 250) {
             beatsWindow.push_back(ms);
 

@@ -1,7 +1,7 @@
 #ifndef BLUETOOTH_H
 #define BLUETOOTH_H
 
-#define RANDOMDATAGEN 1
+#define RANDOMDATAGEN 0
 
 #include <QObject>
 #include <QBluetoothServer>
